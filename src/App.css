@@ -1,0 +1,33 @@
+@import "rsuite/dist/rsuite.css";
+.rs-picker-toggle-value {
+  color: inherit !important;
+}
+.rs-picker-toggle-wrapper {
+  height: 38px;
+}
+.rs-picker-default .rs-picker-toggle.rs-btn {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.rs-picker-toggle {
+  background: white;
+}
+
+.rs-picker-toggle input {
+  outline: none !important;
+    border: 0px;
+}
+
+.rs-picker-toggle:focus {
+  border-color: rgb(229 231 235 / var(--tw-border-opacity)) !important;
+}
+
+.rs-btn-primary {
+  background-color: #3498ff !important;
+}
+
+.menuBar a:hover, .menuBar a:active, .menuBar a:focus {
+  color: white;
+  text-decoration: none;
+}

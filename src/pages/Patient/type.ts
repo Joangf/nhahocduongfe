@@ -1,0 +1,26 @@
+export type PatientType = {
+  code?: string;
+  id?: string;
+  fullName: string;
+  birthDate?: string;
+  gender?: string;
+  school?: any;
+  schoolClass?: any;
+  areaType?: any;
+  province?: any;
+  district?: any;
+  ward?: any;
+  addressLine?: any;
+  nationality?: any;
+  ethnic?: any;
+  guardian?: string;
+  phoneNumber?: string;
+  idNumber?: string;
+  issueDate?: string;
+  issuePlace?: string;
+  healthInsuranceNumber?: any;
+  chronicConditions?: any[];
+  organization?: any;
+  nationalIdNum?: string;
+  careTaker?: string;
+};

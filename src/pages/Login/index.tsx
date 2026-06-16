@@ -1,0 +1,155 @@
+import { api } from "@/api/api";
+import background from "@/assets/background.jpg";
+import bg from "@/assets/bg.svg";
+import logo from "@/assets/logo/logo.png";
+import Button from "@/components/Button";
+import Checkbox from "@/components/Checkbox";
+import Input from "@/components/Input";
+import useAuthStore from "@/stores/authStore";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { useFormik } from "formik";
+import { isEmpty } from "lodash";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import * as Yup from "yup";
+
+interface Props {}
+
+const Login = (props: Props) => {
+  const [showPass, setShowPass] = useState<boolean>(false);
+  const login = useAuthStore((state) => state.login);
+  const navigate = useNavigate();
+
+  const validationSchema = Yup.object().shape({
+    username: Yup.string().required("Vui lòng nhập tên đăng nhập"),
+    password: Yup.string()
+      .required("Vui lòng nhập mật khẩu")
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/,
+        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm số, chữ cái thường và chữ cái IN HOA, và phải có ít nhất 1 ký tự đặc biệt ~!@#$%^&*",
+      ),
+  });
+
+  const formik = useFormik<ILoginForm>({
+    initialValues: {
+      username: "",
+      password: "",
+    },
+    onSubmit: async (values) => {
+      try {
+        // get token
+        await login(values.username, values.password);
+        // const authResponse = await api.post(`/api/auth/login`, values);
+
+        // localStorage.setItem("token", authResponse.data.token);
+        // dispatchEvent(new Event("storage"));
+
+        // localStorage.setItem("userName", values.username);
+
+        // localStorage.setItem("user", JSON.stringify(authResponse.data.data));
+        // dispatchEvent(new Event("storage"));
+
+        // get role
+        // const roleResponse = await api.post(`/commons/role/id'`, values);
+        // handleResponse(roleResponse);
+
+        Swal.fire({
+          icon: "success",
+          title: "Đăng nhập thành công!",
+        });
+
+        navigate("/");
+
+        // const { username, password } = values;
+        // localStorage.setItem("username", username);
+
+        // login(username, password);
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Tên đăng nhập hoặc mật khẩu không đúng",
+        });
+      }
+    },
+    validationSchema: validationSchema,
+  });
+
+  const handleShowPassword = () => {
+    setShowPass(true);
+  };
+
+  const handleHidePassword = () => {
+    setShowPass(false);
+  };
+
+  const { dirty, errors } = formik;
+
+  return (
+    <form onSubmit={formik.handleSubmit}>
+      <div className="grid h-full grid-cols-10  bg-gray-200">
+        <div className="relative col-span-5 flex h-screen items-center justify-center">
+          <div className="absolute left-1/2 top-1/2 max-w-lg -translate-x-1/2 -translate-y-1/2">
+            <img src={bg} className="max-w-xl" />
+          </div>
+          <img src={background} className="h-full w-full" />
+        </div>
+        <div className="col-span-5 flex flex-col items-center justify-center gap-8 bg-white">
+          <div className="flex flex-col items-center gap-4">
+            <img src={logo} className="mb-10 w-60" />
+            <h1 className="text-4xl font-bold uppercase text-indigo-600">
+              Hệ thống quản lý nha học đường
+            </h1>
+          </div>
+          <div className="flex w-[450px] flex-col gap-6 text-4xl">
+            <Input
+              placeholder="Tên đăng nhập"
+              inputClass="py-4 !text-lg"
+              className="max-h-44 "
+              key={123}
+              value={formik.values.username}
+              onChange={formik.handleChange}
+              name="username"
+              error={formik.errors.username}
+            />
+
+            <Input
+              placeholder="Mật khẩu"
+              inputClass="py-4 !text-lg"
+              className="max-h-44"
+              type={showPass ? "text" : "password"}
+              addOnAfter={
+                !showPass ? (
+                  <EyeSlashIcon
+                    cursor="pointer"
+                    onClick={handleShowPassword}
+                    className="h-6 w-6"
+                  />
+                ) : (
+                  <EyeIcon
+                    cursor="pointer"
+                    onClick={handleHidePassword}
+                    className="h-6 w-6"
+                  />
+                )
+              }
+              value={formik.values.password}
+              onChange={formik.handleChange}
+              name="password"
+              error={formik.errors.password}
+            />
+            <Checkbox label="Nhớ mật khẩu" />
+            <Button
+              isDisabled={!isEmpty(errors) || !dirty}
+              type="submit"
+              className="h-14 text-lg"
+            >
+              Đăng nhập
+            </Button>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+};
+export default Login;

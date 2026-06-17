@@ -24,11 +24,7 @@ const Login = (props: Props) => {
   const validationSchema = Yup.object().shape({
     username: Yup.string().required("Vui lòng nhập tên đăng nhập"),
     password: Yup.string()
-      .required("Vui lòng nhập mật khẩu")
-      .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/,
-        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm số, chữ cái thường và chữ cái IN HOA, và phải có ít nhất 1 ký tự đặc biệt ~!@#$%^&*",
-      ),
+      .required("Vui lòng nhập mật khẩu"),
   });
 
   const formik = useFormik<ILoginForm>({

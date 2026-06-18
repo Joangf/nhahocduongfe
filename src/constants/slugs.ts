@@ -19,6 +19,7 @@ const slugs = {
   // management
   management: "/management",
   managementUser: "/management-user",
+  accountRegistration: "/account-registration",
 };
 
 export { slugs };

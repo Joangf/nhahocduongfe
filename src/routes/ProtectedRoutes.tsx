@@ -6,6 +6,7 @@ import DentalRecord from "@/pages/DentalRecord/routes";
 import Logout from "@/pages/Logout";
 import ManagementList from "@/pages/Management/routes/ManagementList";
 import UserManagementList from "@/pages/Management/routes/UserManagementList";
+import AccountRegistrationList from "@/pages/Management/routes/AccountRegistrationList";
 import HealthCheckModal from "@/pages/Patient/components/healthCheckHistoryModalForm";
 import {
   PatientCreate,
@@ -91,6 +92,16 @@ const ProtectedRoutes = (): React.ReactElement<
             {
               path: "",
               element: <UserManagementList />,
+            },
+          ],
+        },
+        {
+          path: slugs.accountRegistration,
+          element: <Outlet />,
+          children: [
+            {
+              path: "",
+              element: <AccountRegistrationList />,
             },
           ],
         },

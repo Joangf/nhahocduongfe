@@ -68,10 +68,10 @@ const LoginLogsList = () => {
       username: data.username || "-",
       ipAddress: data.ipAddress || "-",
       loginTime: formattedDate,
-      statusText: data.status === "SUCCESS" ? (
-        <span className="text-green-600 font-medium">Thành công</span>
+      statusText: data.status ? (
+        <span className="text-green-600 font-medium">Signed In</span>
       ) : (
-        <span className="text-red-600 font-medium">Thất bại</span>
+        <span className="text-red-600 font-medium">Signed Out</span>
       ),
     };
   });

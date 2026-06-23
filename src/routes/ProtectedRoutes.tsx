@@ -17,18 +17,56 @@ import {
 import Superset_BC1 from "@/pages/Superset_BC1";
 
 import { Navigate, Outlet, useRoutes } from "react-router-dom";
+import jwt_decode from "jwt-decode";
+import DentalArticles from "@/pages/DentalArticles";
 
 const ProtectedRoutes = (): React.ReactElement<
   any,
   string | React.JSXElementConstructor<any>
 > | null => {
-  const element = useRoutes([
+  const token = localStorage.getItem("accessToken");
+  let isGuest = false;
+  if (token) {
+    try {
+      const decoded: any = jwt_decode(token);
+      const roles = decoded?.roles || [];
+      isGuest = roles.some((r: any) => r.code === "GUEST");
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const guestRoutes = [
+    {
+      element: <Layout />,
+      children: [
+        {
+          path: slugs.dentalArticles,
+          element: <DentalArticles />,
+        },
+        {
+          path: slugs.logout,
+          element: <Logout />,
+        },
+        {
+          path: "*",
+          element: <Navigate to={slugs.dentalArticles} />,
+        },
+      ],
+    },
+  ];
+
+  const normalRoutes = [
     {
       element: <Layout />,
       children: [
         {
           path: slugs.logout,
           element: <Logout />,
+        },
+        {
+          path: slugs.dentalArticles,
+          element: <DentalArticles />,
         },
         // {
         //   path: slugs.home,
@@ -123,7 +161,9 @@ const ProtectedRoutes = (): React.ReactElement<
         },
       ],
     },
-  ]);
+  ];
+
+  const element = useRoutes(isGuest ? guestRoutes : normalRoutes);
   return element;
 };
 

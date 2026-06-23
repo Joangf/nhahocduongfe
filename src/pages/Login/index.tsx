@@ -18,8 +18,26 @@ interface Props {}
 
 const Login = (props: Props) => {
   const [showPass, setShowPass] = useState<boolean>(false);
-  const login = useAuthStore((state) => state.login);
+  const { login, guestLogin } = useAuthStore();
   const navigate = useNavigate();
+
+  const handleGuestLogin = async () => {
+    try {
+      await guestLogin();
+      Swal.fire({
+        icon: "success",
+        title: "Đăng nhập Guest thành công!",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      navigate("/dental-articles");
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Không thể kết nối dịch vụ Guest. Vui lòng thử lại.",
+      });
+    }
+  };
 
   const validationSchema = Yup.object().shape({
     username: Yup.string().required("Vui lòng nhập tên đăng nhập"),
@@ -141,6 +159,13 @@ const Login = (props: Props) => {
               className="h-14 text-lg"
             >
               Đăng nhập
+            </Button>
+            <Button
+              type="button"
+              onClick={handleGuestLogin}
+              className="h-14 text-lg !bg-slate-600 hover:!bg-slate-700 text-white"
+            >
+              Đăng nhập với vai trò Khách (GUEST)
             </Button>
             <div className="flex items-center justify-center gap-2 mt-2">
               <span className="text-base text-gray-600">

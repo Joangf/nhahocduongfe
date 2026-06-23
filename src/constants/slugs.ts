@@ -21,6 +21,8 @@ const slugs = {
   managementUser: "/management-user",
   accountRegistration: "/account-registration",
   loginLogs: "/login-logs",
+  // dental articles for guest
+  dentalArticles: "/dental-articles",
 };
 
 export { slugs };

@@ -6,6 +6,7 @@ import jwt_decode from "jwt-decode";
 type AuthStore = {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
+  guestLogin: () => Promise<void>;
   logout: () => void;
 };
 
@@ -35,6 +36,20 @@ const useAuthStore = create<AuthStore, any>(
         const decode: any = jwt_decode(token);
         const { username: userName } = decode || {};
         set({ isAuthenticated: true }, false, "useAuthStore/login");
+        setAuthStatus(true, token);
+
+        localStorage.setItem("username", userName);
+      } catch (error) {
+        throw new Error("Error");
+      }
+    },
+    guestLogin: async () => {
+      try {
+        const response = await api.post("/api/auth/guest-login");
+        const token = response.data?.token;
+        const decode: any = jwt_decode(token);
+        const { username: userName } = decode || {};
+        set({ isAuthenticated: true }, false, "useAuthStore/guestLogin");
         setAuthStatus(true, token);
 
         localStorage.setItem("username", userName);

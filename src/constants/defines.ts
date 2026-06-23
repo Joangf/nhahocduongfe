@@ -33,6 +33,11 @@ export const navMenuItems: NavMenuItem[] = [
     title: "Quản lý người dùng",
     slug: slugs.managementUser,
   },
+  {
+    id: uuidv4(),
+    title: "Bài viết khoa học",
+    slug: slugs.dentalArticles,
+  },
   // {
   //   id: uuidv4(),
   //   title: "Báo cáo",

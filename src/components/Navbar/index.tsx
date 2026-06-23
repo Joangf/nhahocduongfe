@@ -70,18 +70,29 @@ export default function Navbar() {
                   </Link>
                   <div className="menuBar hidden sm:ml-6 sm:flex sm:space-x-8">
                     {navMenuItems.filter((item) => {
-                      if (item.slug === slugs.accountRegistration || item.slug === slugs.loginLogs || item.slug === slugs.managementUser) {
-                        const token = localStorage.getItem("accessToken");
-                        let isAdmin = false;
-                        if (token) {
-                          try {
-                            const decoded: any = jwt_decode(token);
-                            const roles = decoded?.roles || [];
-                            isAdmin = roles.some((r: any) => r.code === "ADMIN");
-                          } catch (e) {
-                            console.error(e);
-                          }
+                      const token = localStorage.getItem("accessToken");
+                      let isGuest = false;
+                      let isAdmin = false;
+                      if (token) {
+                        try {
+                          const decoded: any = jwt_decode(token);
+                          const roles = decoded?.roles || [];
+                          isGuest = roles.some((r: any) => r.code === "GUEST");
+                          isAdmin = roles.some((r: any) => r.code === "ADMIN");
+                        } catch (e) {
+                          console.error(e);
                         }
+                      }
+
+                      if (isGuest) {
+                        return item.slug === slugs.dentalArticles;
+                      }
+
+                      if (item.slug === slugs.dentalArticles) {
+                        return false;
+                      }
+
+                      if (item.slug === slugs.accountRegistration || item.slug === slugs.loginLogs || item.slug === slugs.managementUser) {
                         return isAdmin;
                       }
                       return true;
@@ -178,7 +189,8 @@ export default function Navbar() {
                       leaveTo="transform opacity-0 scale-95"
                     >
                       <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <Menu.Item>
+                        {localStorage.getItem("username") != "guest" && (
+                          <Menu.Item>
                           {({ active }) => (
                             <>
                               <p
@@ -193,6 +205,7 @@ export default function Navbar() {
                             </>
                           )}
                         </Menu.Item>
+                        )}
                         <Menu.Item>
                           {({ active }) => (
                             <p

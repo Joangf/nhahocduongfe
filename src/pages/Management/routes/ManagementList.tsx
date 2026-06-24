@@ -47,25 +47,14 @@ const ManagementList = (props: Props) => {
   const [listProvince, setListProvince] = useState<any>([]);
   const [province, setProvince] = useState<any>();
   const [dataFetching, setDataFetching] = useState([]);
-  const [reFetching, setReFetching] = useState<boolean>(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [searchText, setSearchText] = useState<string>("");
+  const [activeFilters, setActiveFilters] = useState<{
+    areaCode?: string;
+    searchText?: string;
+  }>({});
   const userInfor = getLocalUserInfo();
   const organizationType = userInfor?.organization?.type;
-
-  useEffect(() => {
-    api
-      .get("/api/organization/search?sort=updatedDate,desc")
-      .then((res) => {
-        if (res.status === 200) {
-          setTotalPage(res.data.totalPages);
-          setDataFetching(res.data.content);
-          setReFetching(false);
-        }
-      })
-      .catch((err) => {
-        throw err;
-      });
-  }, [reFetching]);
 
   const dataSource = dataFetching.map((data: any, idx) => ({
     stt: idx + 1,
@@ -127,55 +116,47 @@ const ManagementList = (props: Props) => {
   }, []);
 
   const handleSearch = (e: any) => {
-    const queryParams = new URLSearchParams();
-    if (province) {
-      queryParams.append(
-        "areaCode",
-        province?.item.code ? province?.item.code : "",
-      );
-    }
-    if (searchText) {
-      queryParams.append("searchText", searchText);
-    }
-    api
-      .get(`/api/organization/search`, { params: queryParams })
-      .then((res) => {
-        if (res.status === 200) {
-          setTotalPage(res.data.totalPages);
-          setDataFetching(res.data.content);
-        }
-      })
-      .catch((err) => {
-        throw err;
-      });
+    const newFilters: { areaCode?: string; searchText?: string } = {};
+    if (province?.item?.code) newFilters.areaCode = province.item.code;
+    if (searchText) newFilters.searchText = searchText;
+    setActiveFilters(newFilters);
+    setCurPage(1);
   };
 
-  const paging = () => {
-    var pageIdx = [];
-    for (let i = 0; i < totalPage; i++) {
-      pageIdx.push(
-        <a
-          onClick={() => setCurPage(i + 1)}
-          aria-current="page"
-          className={
-            curPage === i + 1
-              ? "relative z-10 inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              : "relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-          }
-        >
-          {i + 1}
-        </a>,
-      );
+  const getPageNumbers = (): (number | "...")[] => {
+    if (totalPage <= 7) {
+      return Array.from({ length: totalPage }, (_, i) => i + 1);
     }
-    return pageIdx;
+    const delta = 2;
+    const pages: (number | "...")[] = [];
+    const left = curPage - delta;
+    const right = curPage + delta;
+
+    pages.push(1);
+    if (left > 2) pages.push("...");
+    for (let i = Math.max(2, left); i <= Math.min(totalPage - 1, right); i++) {
+      pages.push(i);
+    }
+    if (right < totalPage - 1) pages.push("...");
+    pages.push(totalPage);
+    return pages;
   };
 
   useEffect(() => {
-    api.get(`/api/organization/search?page=${curPage - 1}`).then((response) => {
-      setTotalPage(response.data.totalPages);
-      setDataFetching(response.data.content);
-    });
-  }, [curPage]);
+    const queryParams = new URLSearchParams();
+    queryParams.append("page", (curPage - 1).toString());
+    queryParams.append("sort", "code,asc");
+    if (activeFilters.areaCode)
+      queryParams.append("areaCode", activeFilters.areaCode);
+    if (activeFilters.searchText)
+      queryParams.append("searchText", activeFilters.searchText);
+    api
+      .get(`/api/organization/search`, { params: queryParams })
+      .then((response) => {
+        setTotalPage(response.data.totalPages);
+        setDataFetching(response.data.content);
+      });
+  }, [curPage, activeFilters, refreshKey]);
 
   const handleRemoveOrganization = (id: any, name: string) => {
     Swal.fire({
@@ -194,7 +175,7 @@ const ManagementList = (props: Props) => {
             Swal.fire({
               icon: "success",
               title: "Xoá trường học thành công?",
-            }).then(() => setReFetching(true));
+            }).then(() => setRefreshKey((k) => k + 1));
           })
           .catch(() => {
             Swal.fire({
@@ -217,7 +198,7 @@ const ManagementList = (props: Props) => {
         <Modal
           isOpen={isOpenForm}
           setIsOpen={setIsOpenForm}
-          onClose={() => setReFetching(true)}
+          onClose={() => setRefreshKey((k) => k + 1)}
           title={!isEdit ? "Thêm mới trường" : "Chỉnh sửa trường"}
         >
           <OrganizationForm
@@ -225,7 +206,7 @@ const ManagementList = (props: Props) => {
             isEdit={isEdit}
             onSuccess={() => {
               setIsOpenForm(false);
-              setReFetching(true);
+              setRefreshKey((k) => k + 1);
             }}
           />
         </Modal>
@@ -314,7 +295,29 @@ const ManagementList = (props: Props) => {
                       />
                     </svg>
                   </a>
-                  {paging()}
+                  {getPageNumbers().map((page, idx) =>
+                    page === "..." ? (
+                      <span
+                        key={`ellipsis-${idx}`}
+                        className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300"
+                      >
+                        …
+                      </span>
+                    ) : (
+                      <a
+                        key={page}
+                        onClick={() => setCurPage(page as number)}
+                        aria-current={curPage === page ? "page" : undefined}
+                        className={
+                          curPage === page
+                            ? "relative z-10 inline-flex cursor-pointer items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                            : "relative inline-flex cursor-pointer items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+                        }
+                      >
+                        {page}
+                      </a>
+                    ),
+                  )}
                   <a
                     onClick={() =>
                       curPage === totalPage ? {} : setCurPage((old) => old + 1)

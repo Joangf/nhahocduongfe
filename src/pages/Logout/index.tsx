@@ -8,8 +8,11 @@ const Logout = (props: Props) => {
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   useEffect(() => {
-    logout();
-    navigate("/login");
+    const doLogout = async () => {
+      await logout();
+      navigate("/login", { replace: true });
+    };
+    doLogout();
   }, []);
 
   return <div>Đang đăng xuất ...</div>;

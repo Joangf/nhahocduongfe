@@ -99,4 +99,7 @@ export const userApi = {
 
   /** Admin từ chối + xóa tài khoản */
   reject: (id: number) => api.delete(`/api/user/${id}/reject`),
+
+  /** Đăng xuất — ghi nhận thời điểm logout */
+  logout: () => api.post("/api/auth/logout"),
 };

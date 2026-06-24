@@ -14,12 +14,16 @@ const columns: TableColumn[] = [
     dataIndex: "username",
   },
   {
-    title: "Địa chỉ IP",
-    dataIndex: "ipAddress",
+    title: "Số điện thoại",
+    dataIndex: "phoneNumber",
   },
   {
     title: "Thời gian đăng nhập",
     dataIndex: "loginTime",
+  },
+  {
+    title: "Thời gian đăng xuất",
+    dataIndex: "logoutTime",
   },
   {
     title: "Trạng thái",
@@ -50,10 +54,10 @@ const LoginLogsList = () => {
   }, [curPage, fetchLogs]);
 
   const dataSource = dataFetching.map((data: any, idx: number) => {
-    let formattedDate = "-";
-    if (data.loginTime) {
-      const date = new Date(data.loginTime);
-      formattedDate = date.toLocaleString('vi-VN', {
+    const formatDate = (dateStr: string | null) => {
+      if (!dateStr) return "-";
+      const date = new Date(dateStr);
+      return date.toLocaleString('vi-VN', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -61,18 +65,22 @@ const LoginLogsList = () => {
         minute: '2-digit',
         second: '2-digit',
       });
-    }
+    };
+
+    const renderStatus = () => {
+      if (data.logoutTime) {
+        return <span className="text-red-500 font-medium">Đã đăng xuất</span>;
+      }
+      return <span className="text-green-600 font-medium">Đã đăng nhập</span>;
+    };
 
     return {
       stt: (curPage - 1) * 10 + idx + 1,
       username: data.username || "-",
-      ipAddress: data.ipAddress || "-",
-      loginTime: formattedDate,
-      statusText: data.status ? (
-        <span className="text-green-600 font-medium">Signed In</span>
-      ) : (
-        <span className="text-red-600 font-medium">Signed Out</span>
-      ),
+      phoneNumber: data.phoneNumber || "-",
+      loginTime: formatDate(data.loginTime),
+      logoutTime: formatDate(data.logoutTime),
+      statusText: renderStatus(),
     };
   });
 

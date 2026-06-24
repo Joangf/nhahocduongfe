@@ -7,7 +7,7 @@ type AuthStore = {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
   guestLogin: () => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const checkAuthStatus = () => {
@@ -57,7 +57,13 @@ const useAuthStore = create<AuthStore, any>(
         throw new Error("Error");
       }
     },
-    logout: () => {
+    logout: async () => {
+      // Gọi API backend để ghi nhận thời điểm logout
+      try {
+        await api.post("/api/auth/logout");
+      } catch (e) {
+        // Bỏ qua lỗi, vẫn xóa token client
+      }
       set({ isAuthenticated: false }, false, "useAuthStore/logout");
       setAuthStatus(false);
       localStorage.removeItem("accessToken");

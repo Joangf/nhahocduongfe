@@ -144,10 +144,9 @@ const PatientDetail = (props: Props) => {
     () => {
       const code = formik.values?.addressLine?.code;
 
-      const url = code ? `/api/organization/search?areaCode=${code}` : '/api/organization/search';
+      const url = code ? `/api/organization/search?areaCode=${code}&size=1000&sort=code,asc` : '/api/organization/search?size=1000&sort=code,asc';
       return api.get(url).then((response) => {
-        if (code) return response.data.content;
-        return response.data.content;
+        return response.data.content ?? [];
       });
     },
     { refetchOnWindowFocus: false }

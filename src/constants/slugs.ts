@@ -23,6 +23,9 @@ const slugs = {
   loginLogs: "/login-logs",
   // dental articles for guest
   dentalArticles: "/dental-articles",
+  // exam campaign
+  examCampaign: "/exam-campaign",
+  examSchedule: "/exam-campaign/:campaignId/schedule",
 };
 
 export { slugs };

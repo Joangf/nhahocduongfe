@@ -8,6 +8,11 @@ export const navMenuItems: NavMenuItem[] = [
     title: "Học sinh",
     slug: slugs.patients,
   },
+  {
+    id: uuidv4(),
+    title: "Đợt khám",
+    slug: slugs.examCampaign,
+  },
   // {
   //   id: uuidv4(),
   //   title: "Bệnh án",

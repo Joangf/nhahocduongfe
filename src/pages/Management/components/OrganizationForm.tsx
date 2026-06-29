@@ -93,13 +93,29 @@ const OrganizationForm = ({
   const formik = useFormik<IOrganization>({
     initialValues: init,
     onSubmit: (values: any) => {
+      // Validate bắt buộc
+      if (!values.address || !values.address.name) {
+        Swal.fire({
+          icon: "warning",
+          title: "Vui lòng chọn Tỉnh/ thành trước khi lưu!",
+        });
+        return;
+      }
+      if (!values.name || !values.name.trim()) {
+        Swal.fire({
+          icon: "warning",
+          title: "Vui lòng nhập Tên trường!",
+        });
+        return;
+      }
+
       const compactData = omit(values, "inputClassName");
 
       const submitData = {
         ...compactData,
-        address: values.address.name,
+        address: values.address?.name ?? "",
         code: values.areaCode,
-        areaCode: values.address.code,
+        areaCode: values.address?.code ?? "",
       };
 
       if (isEdit) {

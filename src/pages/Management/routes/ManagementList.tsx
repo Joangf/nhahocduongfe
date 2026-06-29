@@ -1,6 +1,6 @@
 import { api } from "@/api/api";
 import { TableColumn } from "@/components/Table/type";
-import { PencilSquareIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PencilSquareIcon, XMarkIcon, AcademicCapIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import { Tooltip } from "@mui/material";
 import Button from "@/components/Button";
@@ -10,6 +10,7 @@ import Select from "@/components/Select";
 import Table from "@/components/Table";
 import Swal from "sweetalert2";
 import OrganizationForm from "../components/OrganizationForm";
+import ClassManagementModal from "../components/ClassManagementModal";
 import Input from "@/components/Input";
 import { getLocalUserInfo } from "@/utils/storage";
 
@@ -33,6 +34,10 @@ const columns: TableColumn[] = [
     dataIndex: "address",
   },
   {
+    title: "Quản lý lớp",
+    dataIndex: "classAction",
+  },
+  {
     title: "Thao tác",
     dataIndex: "action",
   },
@@ -53,26 +58,48 @@ const ManagementList = (props: Props) => {
     areaCode?: string;
     searchText?: string;
   }>({});
+  // State quản lý modal lớp học
+  const [isOpenClassModal, setIsOpenClassModal] = useState<boolean>(false);
+  const [selectedOrgForClass, setSelectedOrgForClass] = useState<{ id: any; name: string } | null>(null);
+
   const userInfor = getLocalUserInfo();
   const organizationType = userInfor?.organization?.type;
+
+  const handleOpenClassModal = (id: any, name: string) => {
+    setSelectedOrgForClass({ id, name });
+    setIsOpenClassModal(true);
+  };
 
   const dataSource = dataFetching.map((data: any, idx) => ({
     stt: idx + 1,
     code: data.code,
     name: data.name,
     address: data.address,
+    classAction: (
+      <span className="flex justify-center">
+        <Tooltip title="Quản lý lớp học" placement="top">
+          <button
+            onClick={() => handleOpenClassModal(data.id, data.name)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer"
+          >
+            <AcademicCapIcon className="h-4 w-4" />
+            Quản lý lớp
+          </button>
+        </Tooltip>
+      </span>
+    ),
     action: (
       <span className="flex justify-center gap-4">
         <Tooltip title="Chỉnh sửa" placement="top">
           <PencilSquareIcon
-            className="h-6 w-6"
+            className="h-6 w-6 cursor-pointer"
             onClick={() => handleUpdate(data.id)}
           />
         </Tooltip>
         {!organizationType ? (
           <Tooltip title="Xóa" placement="top">
             <XMarkIcon
-              className="h-6 w-6"
+              className="h-6 w-6 cursor-pointer"
               color="red"
               onClick={() => handleRemoveOrganization(data.id, data.name)}
             />
@@ -208,6 +235,20 @@ const ManagementList = (props: Props) => {
               setIsOpenForm(false);
               setRefreshKey((k) => k + 1);
             }}
+          />
+        </Modal>
+      )}
+
+      {isOpenClassModal && selectedOrgForClass && (
+        <Modal
+          isOpen={isOpenClassModal}
+          setIsOpen={setIsOpenClassModal}
+          title={`Quản lý Lớp học – ${selectedOrgForClass.name}`}
+        >
+          <ClassManagementModal
+            organizationId={selectedOrgForClass.id}
+            organizationName={selectedOrgForClass.name}
+            onClose={() => setIsOpenClassModal(false)}
           />
         </Modal>
       )}

@@ -19,6 +19,7 @@ import Superset_BC1 from "@/pages/Superset_BC1";
 import { Navigate, Outlet, useRoutes } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 import DentalArticles from "@/pages/DentalArticles";
+import { ExamCampaignList, ExamScheduleManager } from "@/pages/ExamCampaign/routes";
 
 const ProtectedRoutes = (): React.ReactElement<
   any,
@@ -75,6 +76,20 @@ const ProtectedRoutes = (): React.ReactElement<
         {
           path: slugs.report1,
           element: <Superset_BC1 />,
+        },
+        {
+          path: slugs.examCampaign,
+          element: <Outlet />,
+          children: [
+            {
+              path: "",
+              element: <ExamCampaignList />,
+            },
+            {
+              path: slugs.examSchedule,
+              element: <ExamScheduleManager />,
+            },
+          ],
         },
         {
           path: slugs.patients,

@@ -31,6 +31,14 @@ const columns: TableColumn[] = [
     dataIndex: "phoneNumber",
   },
   {
+    title: "Loại tài khoản",
+    dataIndex: "accountType",
+  },
+  {
+    title: "Trường học",
+    dataIndex: "schoolName",
+  },
+  {
     title: "Ngày đăng ký",
     dataIndex: "createdDate",
   },
@@ -158,6 +166,38 @@ const AccountRegistrationList = () => {
     });
   };
 
+  const getAccountType = (data: any): string => {
+    const roleList = data.roleList || [];
+    if (roleList.length === 0) {
+      // Fallback: nếu có organization thì đoán là Trường học
+      if (data.organization?.name) return "Trường học";
+      return "-";
+    }
+    // Kiểm tra role liên quan đến trường học (GUEST = Trường học)
+    const hasSchoolRole = roleList.some(
+      (r: any) =>
+        r.code?.toUpperCase() === "GUEST" ||
+        r.code?.toUpperCase() === "SCHOOL" ||
+        r.name?.toLowerCase().includes("trường") ||
+        r.name?.toLowerCase().includes("school"),
+    );
+    // Kiểm tra role liên quan đến bác sĩ / nha sĩ
+    const hasDoctorRole = roleList.some(
+      (r: any) =>
+        r.code?.toUpperCase() === "DOCTOR" ||
+        r.code?.toUpperCase() === "DENTIST" ||
+        r.name?.toLowerCase().includes("bác sĩ") ||
+        r.name?.toLowerCase().includes("nha sĩ") ||
+        r.name?.toLowerCase().includes("nha khoa") ||
+        r.name?.toLowerCase().includes("doctor") ||
+        r.name?.toLowerCase().includes("dentist"),
+    );
+    if (hasSchoolRole) return "Trường học";
+    if (hasDoctorRole) return "Bác sĩ";
+    // Nếu không match pattern nào, hiển thị tên role đầu tiên
+    return roleList[0]?.name || "-";
+  };
+
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "-";
     try {
@@ -174,6 +214,11 @@ const AccountRegistrationList = () => {
     fullName: `${data.lastName || ""} ${data.firstName || ""}`.trim() || "-",
     email: data.email || "-",
     phoneNumber: data.phoneNumber || "-",
+    accountType: getAccountType(data),
+    schoolName:
+      getAccountType(data) === "Trường học"
+        ? data.organization?.name || "-"
+        : "-",
     createdDate: formatDate(data.createdDate),
     action: (
       <span className="flex justify-center gap-4">

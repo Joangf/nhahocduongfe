@@ -17,5 +17,7 @@ export interface IExamSchedule {
   organizationName?: string;
   schoolClass: string;
   examDate: string; // Format: YYYY-MM-DD
+  dentistIds?: number[];
+  dentistNames?: string[];
   status?: boolean;
 }

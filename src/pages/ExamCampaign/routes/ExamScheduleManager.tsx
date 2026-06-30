@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/api/api";
+import { dentistApi, Dentist } from "@/api/dentistApi";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
 import Input from "@/components/Input";
@@ -11,18 +12,38 @@ import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Swal from "sweetalert2";
 import { IExamCampaign, IExamSchedule } from "../type";
 
+const PAGE_SIZE = 10;
+
+/* ─────────────────────────────────────────────
+   Dentist option type
+   ───────────────────────────────────────────── */
+interface DentistOption {
+  value: number;
+  label: string;
+  firstName: string;
+}
+
+/* ─────────────────────────────────────────────
+   Table columns
+   ───────────────────────────────────────────── */
 const columns: TableColumn[] = [
   { title: "STT", dataIndex: "stt" },
   { title: "Trường", dataIndex: "organizationName" },
   { title: "Lớp", dataIndex: "schoolClass" },
   { title: "Ngày khám", dataIndex: "examDate" },
+  { title: "Bác sĩ", dataIndex: "dentistDisplay" },
   { title: "Thao tác", dataIndex: "action", isAction: true },
 ];
 
+
+/* ══════════════════════════════════════════════
+   MAIN COMPONENT
+   ══════════════════════════════════════════════ */
 const ExamScheduleManager = () => {
   const { campaignId } = useParams<{ campaignId: string }>();
   const navigate = useNavigate();
 
+  // ── Form states ──
   const [campaign, setCampaign] = useState<IExamCampaign | null>(null);
   const [provinces, setProvinces] = useState<any[]>([]);
   const [selectedProvince, setSelectedProvince] = useState<any>(null);
@@ -32,9 +53,18 @@ const ExamScheduleManager = () => {
   const [classOptions, setClassOptions] = useState<any[]>([]);
   const [selectedClassOption, setSelectedClassOption] = useState<any>(null);
   const [examDate, setExamDate] = useState("");
-  const [schedules, setSchedules] = useState<IExamSchedule[]>([]);
 
-  // Fetch campaign info
+  // ── Dentist states ──
+  const [dentistOptions, setDentistOptions] = useState<DentistOption[]>([]);
+  const [selectedDentists, setSelectedDentists] = useState<DentistOption[]>([]);
+
+  // ── Schedule list & pagination ──
+  const [schedules, setSchedules] = useState<IExamSchedule[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  /* ============================================
+     Data fetching
+     ============================================ */
   const fetchCampaign = async () => {
     try {
       const res = await api.get<IExamCampaign>(
@@ -51,7 +81,6 @@ const ExamScheduleManager = () => {
     }
   };
 
-  // Fetch provinces
   const fetchProvinces = async () => {
     try {
       const res = await api.get("/api/areas/lookup?region=SOUTH");
@@ -71,7 +100,6 @@ const ExamScheduleManager = () => {
     }
   };
 
-  // Fetch schools using organization search
   const fetchSchools = async () => {
     try {
       const res = await api.get(
@@ -94,7 +122,23 @@ const ExamScheduleManager = () => {
     }
   };
 
-  // Fetch current schedules for this campaign
+  /** Fetch danh sách bác sĩ từ bảng nhahocduong_dentist */
+  const fetchDentists = async () => {
+    try {
+      const res = await dentistApi.getAll();
+      console.log("Fetched dentists:", res.data.content); 
+      const list: Dentist[] = res.data.content || [];
+      const options: DentistOption[] = list.map((d: Dentist) => ({
+        value: d.id,
+        label: d.title,
+        firstName: d.title,
+      }));
+      setDentistOptions(options);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchSchedules = async () => {
     try {
       const res = await api.get<IExamSchedule[]>(
@@ -111,12 +155,15 @@ const ExamScheduleManager = () => {
       fetchCampaign();
       fetchProvinces();
       fetchSchools();
+      fetchDentists();
       fetchSchedules();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaignId]);
 
-  // Filter schools based on selected province
+  /* ============================================
+     Derived filtering
+     ============================================ */
   useEffect(() => {
     if (selectedProvince && selectedProvince.value) {
       const code = selectedProvince.value.code;
@@ -132,14 +179,11 @@ const ExamScheduleManager = () => {
     }
   }, [selectedProvince, allSchools]);
 
-  // Load classes of selected school
   useEffect(() => {
     if (selectedSchoolOption && selectedSchoolOption.value) {
       const school = selectedSchoolOption.value;
       const classesMap = school.classes || {};
-      const flatClasses: string[] = Object.values(
-        classesMap,
-      ).flat() as string[];
+      const flatClasses: string[] = Object.values(classesMap).flat() as string[];
       const sortedClasses = Array.from(
         new Set(flatClasses.filter(Boolean)),
       ).sort();
@@ -155,6 +199,21 @@ const ExamScheduleManager = () => {
     }
   }, [selectedSchoolOption]);
 
+  /* ============================================
+     Dentist helpers
+     ============================================ */
+  const handleRemoveDentist = (item: DentistOption) => {
+    setSelectedDentists((prev) => prev.filter((d) => d.value !== item.value));
+  };
+
+  /** Compact label cho Select: trả về firstName của dentist */
+  const getDentistCompactLabel = (opt: DentistOption): string => {
+    return opt.firstName;
+  };
+
+  /* ============================================
+     CRUD: Save schedule
+     ============================================ */
   const handleSaveSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSchoolOption) {
@@ -188,6 +247,7 @@ const ExamScheduleManager = () => {
         organizationId: selectedSchoolOption.value.id,
         schoolClass: selectedClassOption.value,
         examDate: examDate,
+        dentistIds: selectedDentists.map((d) => d.value),
       };
 
       await api.post(`/api/exam-campaigns/${campaignId}/schedules`, payload);
@@ -197,19 +257,20 @@ const ExamScheduleManager = () => {
         timer: 1500,
         showConfirmButton: false,
       });
+      // Reset form
       setExamDate("");
       setSelectedClassOption(null);
+      setSelectedDentists([]);
       fetchSchedules();
     } catch (err: any) {
       const msg = err?.response?.data?.message || "Không thể lưu lịch khám!";
-      Swal.fire({
-        icon: "error",
-        title: "Lỗi",
-        text: msg,
-      });
+      Swal.fire({ icon: "error", title: "Lỗi", text: msg });
     }
   };
 
+  /* ============================================
+     CRUD: Delete schedule
+     ============================================ */
   const handleDeleteSchedule = (
     scheduleId: number,
     className: string,
@@ -241,43 +302,91 @@ const ExamScheduleManager = () => {
         } catch (err: any) {
           const msg =
             err?.response?.data?.message || "Không thể xóa lịch khám!";
-          Swal.fire({
-            icon: "error",
-            title: "Lỗi",
-            text: msg,
-          });
+          Swal.fire({ icon: "error", title: "Lỗi", text: msg });
         }
       }
     });
   };
 
-  const dataSource = schedules.map((data, idx) => ({
-    stt: idx + 1,
-    organizationName: data.organizationName || "—",
-    schoolClass: data.schoolClass,
-    examDate: data.examDate,
-    action: (
-      <span
-        className="flex items-center justify-center"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <TrashIcon
-          className="h-6 w-6 cursor-pointer text-red-600 hover:text-red-800"
-          onClick={() =>
-            handleDeleteSchedule(
-              data.id!,
-              data.schoolClass,
-              data.organizationName || "",
-            )
-          }
-        />
-      </span>
-    ),
-  }));
+  /* ============================================
+     Build data source
+     ============================================ */
+  const fullDataSource = schedules.map((data, idx) => {
+    // API có thể trả về dentistNames hoặc chỉ dentistIds → map từ dentistOptions
+    console.log("Mapping schedule:", data);
+    const names: string[] =
+      data.dentistNames && data.dentistNames.length > 0
+        ? data.dentistNames
+        : (data.dentistIds || []).map((id) => {
+            const d = dentistOptions.find((opt) => opt.value === id);
+            return d ? d.label : String(id);
+          });
+    const dentistDisplay =
+      names.length === 0 ? (
+        "—"
+      ) : names.length === 1 ? (
+        <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
+          {names[0]}
+        </span>
+      ) : (
+        <div className="flex flex-wrap gap-1">
+          {names.map((name, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700"
+            >
+              {name}
+            </span>
+          ))}
+        </div>
+      );
 
+    return {
+      stt: idx + 1,
+      organizationName: data.organizationName || "—",
+      schoolClass: data.schoolClass,
+      examDate: data.examDate,
+      dentistDisplay,
+      action: (
+        <span
+          className="flex items-center justify-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <TrashIcon
+            className="h-6 w-6 cursor-pointer text-red-600 hover:text-red-800"
+            onClick={() =>
+              handleDeleteSchedule(
+                data.id!,
+                data.schoolClass,
+                data.organizationName || "",
+              )
+            }
+          />
+        </span>
+      ),
+    };
+  });
+
+  /* ============================================
+     Client-side pagination
+     ============================================ */
+  const totalPages = Math.max(1, Math.ceil(fullDataSource.length / PAGE_SIZE));
+  const paginatedData = fullDataSource.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  // Reset page về 1 khi danh sách thay đổi
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [schedules.length]);
+
+  /* ============================================
+     RENDER
+     ============================================ */
   return (
     <div className="mt-5 flex flex-col gap-5 sm:px-6">
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate("/exam-campaign")}
@@ -296,7 +405,7 @@ const ExamScheduleManager = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Side: Scheduling Form */}
+        {/* ═══════════════ LEFT: Scheduling Form ═══════════════ */}
         <Card className="h-fit lg:col-span-1">
           <h2 className="mb-4 border-b pb-2 text-lg font-semibold text-gray-900">
             Thêm lịch khám mới
@@ -338,7 +447,20 @@ const ExamScheduleManager = () => {
               required
             />
 
-            <div className="mt-4 flex justify-end">
+            {/* ── Dentist multi-select (compactMulti mode) ── */}
+            <Select<DentistOption>
+              label="Bác sĩ"
+              placeholder="Chọn bác sĩ"
+              options={dentistOptions}
+              value={selectedDentists}
+              onChange={(val) => setSelectedDentists(val || [])}
+              multiple
+              compactMulti
+              getCompactLabel={getDentistCompactLabel}
+              onRemoveItem={handleRemoveDentist}
+            />
+
+            <div className="mt-2 flex justify-end">
               <Button type="submit" className="w-full">
                 Lưu lịch
               </Button>
@@ -346,15 +468,43 @@ const ExamScheduleManager = () => {
           </form>
         </Card>
 
-        {/* Right Side: List of Schedules */}
+        {/* ═══════════════ RIGHT: Schedule List ═══════════════ */}
         <Card className="lg:col-span-2">
           <h2 className="mb-4 border-b pb-2 text-lg font-semibold text-gray-900">
             Danh sách lịch khám của đợt
           </h2>
-          <Table columns={columns} dataSource={dataSource} />
-          {dataSource.length === 0 && (
+          <Table columns={columns} dataSource={paginatedData} />
+
+          {fullDataSource.length === 0 && (
             <div className="py-8 text-center text-gray-500">
               Chưa có lịch khám nào được lập cho đợt khám này.
+            </div>
+          )}
+
+          {/* ── Pagination ── */}
+          {totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Trước
+              </button>
+              <span className="text-sm text-gray-600">
+                Trang {currentPage} / {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Sau
+              </button>
             </div>
           )}
         </Card>

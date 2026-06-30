@@ -1,9 +1,11 @@
 import { userApi } from "@/api/userApi";
+import { api } from "@/api/api";
 import background from "@/assets/background.jpg";
 import bg from "@/assets/bg.svg";
 import logo from "@/assets/logo/logo.png";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
+import Autocomplete from "@/components/Autocomplete";
 import { IUserInformation, IRole } from "@/pages/Management/type";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { useFormik } from "formik";
@@ -13,17 +15,28 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import * as Yup from "yup";
 
-interface SignupFormData extends Omit<IUserInformation, "id"> {}
+interface SignupFormData extends Omit<IUserInformation, "id"> {
+  accountType: "BAC_SI" | "TRUONG_HOC" | "";
+}
+
+const ACCOUNT_TYPE_OPTIONS = [
+  { value: "BAC_SI", label: "Bác sĩ" },
+  { value: "TRUONG_HOC", label: "Trường học" },
+];
 
 const Signup = () => {
   const [showPass, setShowPass] = useState<boolean>(false);
   const [showConfirmPass, setShowConfirmPass] = useState<boolean>(false);
   const [roles, setRoles] = useState<IRole[]>([]);
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [orgsLoading, setOrgsLoading] = useState(false);
+  const [orgsError, setOrgsError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchRoles();
+    fetchOrganizations();
   }, []);
 
   const fetchRoles = async () => {
@@ -32,6 +45,29 @@ const Signup = () => {
       setRoles(response.data || []);
     } catch (err) {
       console.error("Failed to fetch roles", err);
+    }
+  };
+
+  const fetchOrganizations = async () => {
+    setOrgsLoading(true);
+    setOrgsError(null);
+    try {
+      const response = await api.get(
+        "/api/organization/search?size=1000&sort=name,asc",
+      );
+      const data = response.data?.content || response.data || [];
+      console.log("Organizations loaded:", data.length, "schools");
+      setOrganizations(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      console.error("Failed to fetch organizations:", err);
+      setOrgsError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Không thể tải danh sách trường học",
+      );
+      setOrganizations([]);
+    } finally {
+      setOrgsLoading(false);
     }
   };
 
@@ -52,6 +88,15 @@ const Signup = () => {
     lastName: Yup.string().required("Vui lòng nhập tên"),
     phoneNumber: Yup.string().required("Vui lòng nhập số điện thoại"),
     birthDate: Yup.string().required("Vui lòng chọn ngày sinh"),
+    accountType: Yup.string().required("Vui lòng chọn loại tài khoản"),
+    organizationId: Yup.number().when("accountType", {
+      is: "TRUONG_HOC",
+      then: (schema) =>
+        schema
+          .required("Vui lòng chọn trường học")
+          .typeError("Vui lòng chọn trường học"),
+      otherwise: (schema) => schema.nullable(),
+    }),
   });
 
   const formik = useFormik<SignupFormData>({
@@ -66,11 +111,38 @@ const Signup = () => {
       birthDate: "",
       organizationId: null,
       roleIds: [],
+      accountType: "",
     },
     validationSchema: signupValidationSchema,
     onSubmit: async (values) => {
       try {
         setIsLoading(true);
+
+        // Map account type to corresponding role
+        let mappedRoleIds = [...values.roleIds];
+        if (values.accountType === "BAC_SI") {
+          const doctorRole = roles.find(
+            (r) =>
+              r.code?.toUpperCase() === "DOCTOR" ||
+              r.code?.toUpperCase() === "DENTIST" ||
+              r.name?.toLowerCase().includes("bác sĩ") ||
+              r.name?.toLowerCase().includes("nha sĩ") ||
+              r.name?.toLowerCase().includes("nha khoa") ||
+              r.name?.toLowerCase().includes("doctor") ||
+              r.name?.toLowerCase().includes("dentist"),
+          );
+          if (doctorRole) {
+            mappedRoleIds = [Number(doctorRole.id), ...mappedRoleIds];
+          }
+        } else if (values.accountType === "TRUONG_HOC") {
+          const guestRole = roles.find(
+            (r) => r.code?.toUpperCase() === "GUEST",
+          );
+          if (guestRole) {
+            mappedRoleIds = [Number(guestRole.id), ...mappedRoleIds];
+          }
+        }
+
         const signupData: Omit<IUserInformation, "id" | "rePassword"> = {
           username: values.username,
           password: values.password,
@@ -80,15 +152,15 @@ const Signup = () => {
           phoneNumber: values.phoneNumber,
           birthDate: values.birthDate,
           organizationId: values.organizationId,
-          roleIds: values.roleIds,
+          roleIds: mappedRoleIds,
         };
 
         await userApi.create(signupData);
 
         Swal.fire({
           icon: "success",
-          title: "Đăng ký thành công!",
-          text: "Vui lòng đăng nhập với tài khoản mới của bạn",
+          title: "Đã gửi yêu cầu đăng ký thành công!",
+          text: "Vui lòng đợi admin xét duyệt tài khoản.",
         });
 
         navigate("/login");
@@ -111,6 +183,7 @@ const Signup = () => {
   const handleHideConfirmPass = () => setShowConfirmPass(false);
 
   const { dirty, errors } = formik;
+  const isSchoolSelected = formik.values.accountType === "TRUONG_HOC";
 
   return (
     <form onSubmit={formik.handleSubmit}>
@@ -255,6 +328,73 @@ const Signup = () => {
               onBlur={formik.handleBlur}
               name="rePassword"
               error={formik.touched.rePassword && formik.errors.rePassword}
+            />
+
+            {/* Account Type Selector */}
+            <div>
+              <label className="mb-1 block text-sm font-semibold leading-6 text-gray-900">
+                Loại tài khoản <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-3">
+                {ACCOUNT_TYPE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() =>
+                      formik.setFieldValue("accountType", opt.value)
+                    }
+                    className={`flex-1 rounded-lg border px-4 py-3 text-center text-sm font-medium transition-colors ${
+                      formik.values.accountType === opt.value
+                        ? "border-indigo-600 bg-indigo-600 text-white"
+                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              {formik.touched.accountType && formik.errors.accountType && (
+                <p className="mt-1 text-sm text-red-600">
+                  {formik.errors.accountType}
+                </p>
+              )}
+            </div>
+
+            {/* School Autocomplete - only enabled when "Trường học" is selected */}
+            <Autocomplete
+              name="organizationId"
+              label="Trường học"
+              placeholder={
+                !isSchoolSelected
+                  ? "Vui lòng chọn loại tài khoản \"Trường học\" trước"
+                  : orgsLoading
+                  ? "Đang tải danh sách trường học..."
+                  : orgsError
+                  ? "Lỗi tải dữ liệu, hãy thử lại sau"
+                  : "Nhập tên trường để tìm kiếm..."
+              }
+              options={organizations}
+              value={
+                formik.values.organizationId
+                  ? organizations.find(
+                      (org: any) => org.id === formik.values.organizationId,
+                    ) || null
+                  : null
+              }
+              onChange={(selected: any) => {
+                formik.setFieldValue(
+                  "organizationId",
+                  selected ? selected.id : null,
+                );
+                formik.setFieldTouched("organizationId", true, false);
+              }}
+              getOptionLabel={(option: any) => option.name || ""}
+              disabled={!isSchoolSelected || orgsLoading}
+              required={isSchoolSelected}
+              error={
+                orgsError ||
+                (formik.touched.organizationId && formik.errors.organizationId)
+              }
             />
 
             {/* Submit Button */}

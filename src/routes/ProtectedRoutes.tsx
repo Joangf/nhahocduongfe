@@ -22,6 +22,8 @@ import DentalArticles from "@/pages/DentalArticles";
 import {
   ExamCampaignList,
   ExamScheduleManager,
+  ExamTracking,
+  ReExamList
 } from "@/pages/ExamCampaign/routes";
 
 const ProtectedRoutes = (): React.ReactElement<
@@ -72,10 +74,10 @@ const ProtectedRoutes = (): React.ReactElement<
           path: slugs.dentalArticles,
           element: <DentalArticles />,
         },
-        // {
-        //   path: slugs.home,
-        //   element: <Dashboard />,
-        // },
+        {
+          path: slugs.home,
+          element: <Dashboard />,
+        },
         {
           path: slugs.report1,
           element: <Superset_BC1 />,
@@ -89,8 +91,16 @@ const ProtectedRoutes = (): React.ReactElement<
               element: <ExamCampaignList />,
             },
             {
-              path: slugs.examSchedule,
+              path: ":campaignId/schedule",
               element: <ExamScheduleManager />,
+            },
+            {
+              path: "tracking",
+              element: <ExamTracking />,
+            },
+            {
+              path: "re-exams",
+              element: <ReExamList />,
             },
           ],
         },

@@ -16,6 +16,7 @@ export interface AutocompleteProps<T> {
   disabled?: boolean;
   required?: boolean;
   error?: string | any;
+  loading?: boolean;
 }
 
 function Autocomplete<T>({
@@ -31,6 +32,7 @@ function Autocomplete<T>({
   disabled = false,
   required = false,
   error,
+  loading = false,
 }: AutocompleteProps<T>) {
   const [query, setQuery] = useState("");
 
@@ -91,9 +93,13 @@ function Autocomplete<T>({
       </div>
 
       <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-        {options.length === 0 ? (
+        {loading ? (
           <div className="relative cursor-default select-none px-4 py-2 text-gray-500">
             Đang tải dữ liệu...
+          </div>
+        ) : options.length === 0 ? (
+          <div className="relative cursor-default select-none px-4 py-2 text-gray-500">
+            Không có dữ liệu
           </div>
         ) : filteredOptions.length === 0 && query !== "" ? (
           <div className="relative cursor-default select-none px-4 py-2 text-gray-500">

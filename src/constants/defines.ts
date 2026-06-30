@@ -13,7 +13,16 @@ export const navMenuItems: NavMenuItem[] = [
     title: "Đợt khám",
     slug: slugs.examCampaign,
   },
-  // {
+  {
+    id: uuidv4(),
+    title: "Theo dõi khám",
+    slug: slugs.examCampaign + "/tracking",
+  },
+  {
+    id: uuidv4(),
+    title: "Lịch tái khám",
+    slug: slugs.examCampaign + "/re-exams",
+  },
   //   id: uuidv4(),
   //   title: "Bệnh án",
   //   slug: slugs.dentalRecord,

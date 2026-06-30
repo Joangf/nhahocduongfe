@@ -165,11 +165,14 @@ const Signup = () => {
 
         navigate("/login");
       } catch (err: any) {
+        let errorMsg = err?.response?.data?.detail || err?.response?.data?.message || "Tài khoản hoặc email đã tồn tại";
+        if (errorMsg === "Weak password") {
+          errorMsg = "Mật khẩu quá yếu! Mật khẩu phải có ít nhất 6 ký tự, bao gồm ít nhất 1 chữ cái in HOA, 1 chữ cái in thường và 1 chữ số.";
+        }
         Swal.fire({
           icon: "error",
           title: "Đăng ký thất bại",
-          text:
-            err?.response?.data?.message || "Tài khoản hoặc email đã tồn tại",
+          text: errorMsg,
         });
       } finally {
         setIsLoading(false);
@@ -391,6 +394,7 @@ const Signup = () => {
               getOptionLabel={(option: any) => option.name || ""}
               disabled={!isSchoolSelected || orgsLoading}
               required={isSchoolSelected}
+              loading={orgsLoading}
               error={
                 orgsError ||
                 (formik.touched.organizationId && formik.errors.organizationId)

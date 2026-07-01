@@ -7,11 +7,7 @@ import Select from "@/components/Select";
 import Table from "@/components/Table";
 import { TableColumn } from "@/components/Table/type";
 import { getLocalUserInfo } from "@/utils/storage";
-import {
-  PencilSquareIcon,
-  XMarkIcon,
-  ChartBarIcon,
-} from "@heroicons/react/24/outline";
+import { PencilSquareIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Tooltip } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -324,25 +320,6 @@ const PatientList = (props: Props) => {
   };
 
   const handleSearch = (e: any) => {
-    // const queryParams = new URLSearchParams();
-    // if (searchText) {
-    //   queryParams.append("searchText", searchText);
-    // }
-    // if (school) {
-    //   queryParams.append(
-    //     "organizationName",
-    //     school?.label !== "Tất cả" ? school?.label : "",
-    //   );
-    // }
-    // if (classes) {
-    //   queryParams.append("schoolClass", classes ? classes.value : "");
-    // }
-    // if (province) {
-    //   queryParams.append(
-    //     "areaCode",
-    //     province?.item.code ? province?.item.code : "",
-    //   );
-    // }
     const queryParams = filterParam();
     console.log("quert:", queryParams);
     api
@@ -509,7 +486,7 @@ const PatientList = (props: Props) => {
 
   return (
     <div className="mt-5 flex flex-col gap-5 sm:px-6 ">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="p-2 md:grid md:grid-cols-4 md:gap-4">
         {!organizationType ? (
           <>
             <Select
@@ -535,7 +512,7 @@ const PatientList = (props: Props) => {
           options={classOptions}
           onChange={(v) => setClasses(v)}
         />
-        <div className="flex items-end justify-end gap-3">
+        <div className="mt-2 flex items-end justify-end gap-3">
           <DateRangePicker
             style={{ width: "100%" }}
             placeholder={"dd/mm/yyyy - dd/mm/yyyy"}
@@ -557,15 +534,15 @@ const PatientList = (props: Props) => {
           </Button>
         </div>
       </div>
-      <div className="grid grid-cols-2">
-        <div className="flex gap-3">
+      <div className="p-2 md:grid md:grid-cols-2">
+        <div className="mb-2 flex gap-3">
           <Input
             placeholder="Nhập họ tên hoặc mã BHYT"
             onChange={(e) => setSearchText(e.target.value)}
           />
           <Button onClick={handleSearch}>Tìm kiếm</Button>
         </div>
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-between gap-0.5 md:justify-end md:gap-2">
           <Button onClick={handleExport}>Export</Button>
           <Button onClick={handleImport}>Import</Button>
           <Button onClick={handleExportExportExampleFile}>File mẫu</Button>

@@ -1,7 +1,6 @@
 import logo from "@/assets/logo/logo.png";
-import { navMenuItems, reportsMenu } from "@/constants/defines";
+import { navMenuItems } from "@/constants/defines";
 import { slugs } from "@/constants/slugs";
-import useAuthStore from "@/stores/authStore";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Fragment, useState } from "react";
@@ -16,7 +15,6 @@ function classNames(...classes: string[]) {
 }
 
 export default function Navbar() {
-  const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpenUpdatePassword, setIsOpenUpdatePassword] = useState(false);
@@ -70,7 +68,8 @@ export default function Navbar() {
       <Disclosure as="nav" className="sticky top-0 z-50 bg-indigo-600 shadow">
         {({ open, close }) => (
           <>
-            <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+            {/* "mx-auto max-w-7xl px-2 sm:px-6 lg:px-8"  */}
+            <div className="w-full px-2 sm:px-6 lg:px-8">
               <div className="relative flex h-16 justify-between">
                 <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
                   {/* Mobile menu button */}
@@ -83,7 +82,7 @@ export default function Navbar() {
                     )}
                   </Disclosure.Button>
                 </div>
-                <div className="menuBar flex flex-1 items-center justify-center text-white sm:items-stretch sm:justify-start">
+                <div className="menuBar flex flex-1 items-center justify-center text-white sm:items-stretch">
                   <Link
                     to={slugs.home}
                     className="flex flex-shrink-0 items-center gap-4 font-bold uppercase"
@@ -100,7 +99,7 @@ export default function Navbar() {
                     />
                     Hệ thống quản lý nha học đường
                   </Link>
-                  <div className="menuBar hidden sm:ml-6 sm:flex sm:space-x-8">
+                  <div className="menuBar hidden sm:flex sm:flex-1 sm:items-center sm:justify-evenly sm:gap-2">
                     {filteredMenuItems.map((item) => (
                       <Link
                         to={item.slug}
@@ -123,47 +122,7 @@ export default function Navbar() {
                         location.pathname === slugs.report1 &&
                           "border-white font-semibold",
                       )}
-                    >
-                      {/* <Menu.Button>
-                        <span
-                          className={twMerge(
-                            "text-sm font-medium text-white hover:border-gray-300 hover:text-gray-50",
-                          )}
-                        >
-                          Báo cáo
-                        </span>
-                      </Menu.Button>
-                      <Transition
-                        as={Fragment}
-                        enter="transition ease-out duration-200"
-                        enterFrom="transform opacity-0 scale-95"
-                        enterTo="transform opacity-100 scale-100"
-                        leave="transition ease-in duration-75"
-                        leaveFrom="transform opacity-100 scale-100"
-                        leaveTo="transform opacity-0 scale-95"
-                      >
-                        <Menu.Items className="z-100 absolute right-0 top-16 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                          {reportsMenu.map((item) => (
-                            <Menu.Item key={item.id}>
-                              {({ active }) => (
-                                <Link
-                                  to={item.slug}
-                                  className={classNames(
-                                    "block px-4 py-2 text-sm text-gray-700",
-                                    active ? "bg-gray-100" : "",
-                                    location.pathname === item.slug
-                                      ? "bg-gray-100"
-                                      : "",
-                                  )}
-                                >
-                                  {item.title}
-                                </Link>
-                              )}
-                            </Menu.Item>
-                          ))}
-                        </Menu.Items>
-                      </Transition> */}
-                    </Menu>
+                    ></Menu>
                   </div>
                 </div>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">

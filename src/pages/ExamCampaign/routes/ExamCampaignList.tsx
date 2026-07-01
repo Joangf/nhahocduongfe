@@ -180,11 +180,21 @@ const ExamCampaignList = () => {
   return (
     <div className="mt-5 flex flex-col gap-5 sm:px-6">
       {/* Header and Controls */}
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+      <div className="flex flex-col items-start justify-between gap-4 p-2 sm:flex-row sm:items-center">
         <h1 className="text-2xl font-bold text-gray-900">Danh sách đợt khám</h1>
-        <div className="flex gap-2">
-          <Button onClick={() => navigate("/exam-campaign/tracking")} className="bg-indigo-600 text-white hover:bg-indigo-700">Theo dõi trạng thái</Button>
-          <Button onClick={() => navigate("/exam-campaign/re-exams")} className="bg-orange-600 text-white hover:bg-orange-700">Lịch tái khám</Button>
+        <div className="grid grid-cols-2 gap-4 md:flex md:gap-2">
+          <Button
+            onClick={() => navigate("/exam-campaign/tracking")}
+            className="bg-indigo-600 text-white hover:bg-indigo-700"
+          >
+            Theo dõi trạng thái
+          </Button>
+          <Button
+            onClick={() => navigate("/exam-campaign/re-exams")}
+            className="bg-orange-600 text-white hover:bg-orange-700"
+          >
+            Lịch tái khám
+          </Button>
           <Button onClick={handleCreate}>Thêm đợt khám mới</Button>
         </div>
       </div>

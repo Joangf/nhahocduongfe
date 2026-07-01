@@ -2,10 +2,12 @@ import { api } from "@/api/api";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
 import Divider from "@/components/Dividers";
+import EditableTextarea from "@/components/EditableTextarea";
+import ImageUploadBox from "@/components/ImageUploadBox";
 import Odontogram from "@/pages/DentalRecord/components/Odontogram";
 import TreatmentTable from "@/pages/DentalRecord/components/TreatmentTable";
 import React, { useRef, useState } from "react";
-import { useQuery } from "react-query";
+import { useQuery, useQueryClient } from "react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import UpdateHeathCheckHistory from "./updateHeathCheckHistory";
 import Confirm from "@/components/ConfirmDialog";
@@ -60,6 +62,11 @@ const HealthCheckModal = (props: Props) => {
   const [fromDate, setFromDate] = useState<any>();
   const [toDate, setToDate] = useState<any>();
   const [checked, setChecked] = useState<boolean>(false);
+  const queryClient = useQueryClient();
+
+  // ── Sections 4, 5, 6 state ──
+  const [examDetail, setExamDetail] = useState<any>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const { data: patient } = useQuery(
     `/api/patient/${id}`,
@@ -226,10 +233,24 @@ const HealthCheckModal = (props: Props) => {
     setChecked(!checked);
   };
 
-  const handleRecordClicked = (record: any) => {
+  const handleRecordClicked = async (record: any) => {
     setChecked(record.useVecniFlour);
     rowIndex.current = record.id;
     setSelectedRecordId(record.id);
+
+    // Fetch exam detail để lấy dữ liệu sections 4, 5, 6
+    setDetailLoading(true);
+    try {
+      const res = await api.get(
+        `/api/patients/${id}/exams/${record.id}`
+      );
+      setExamDetail(res.data);
+    } catch (err) {
+      console.error("Lỗi khi tải chi tiết phiếu khám:", err);
+      setExamDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   const handleRefresh = () => {
@@ -271,6 +292,63 @@ const HealthCheckModal = (props: Props) => {
         await setTriggerUpdate(true);
       }
     });
+  };
+
+  // ── PATCH: Cập nhật đánh giá bệnh lý & ghi chú điều trị (mục 4 & 5) ──
+  const handleSaveAssessment = async (field: "pathologyAssessment" | "treatmentNote", newValue: string) => {
+    if (!selectedRecordId) return;
+    const body: any = {};
+    body[field] = newValue;
+    await api.patch(`/api/exams/${selectedRecordId}/assessment`, body);
+    // Refresh exam detail
+    setExamDetail((prev: any) => ({ ...prev, [field]: newValue }));
+    queryClient.invalidateQueries([`/api/patients/${id}/exams/${selectedRecordId}`]);
+  };
+
+  // ── PATCH: Cập nhật ảnh (mục 6) ──
+  const handleImageUploaded = async (
+    side: "before" | "after",
+    publicUrl: string,
+    uploadedAt: string
+  ) => {
+    if (!selectedRecordId) return;
+    const body: any = {};
+    if (side === "before") {
+      body.imageBeforeUrl = publicUrl;
+      body.imageBeforeTime = uploadedAt;
+    } else {
+      body.imageAfterUrl = publicUrl;
+      body.imageAfterTime = uploadedAt;
+    }
+    await api.patch(`/api/exams/${selectedRecordId}/images`, body);
+    // Refresh exam detail
+    setExamDetail((prev: any) => ({
+      ...prev,
+      ...(side === "before"
+        ? { imageBeforeUrl: publicUrl, imageBeforeTime: uploadedAt }
+        : { imageAfterUrl: publicUrl, imageAfterTime: uploadedAt }),
+    }));
+  };
+
+  // ── PATCH: Xóa ảnh (mục 6) ──
+  const handleImageDeleted = async (side: "before" | "after") => {
+    if (!selectedRecordId) return;
+    const body: any = {};
+    if (side === "before") {
+      body.imageBeforeUrl = null;
+      body.imageBeforeTime = null;
+    } else {
+      body.imageAfterUrl = null;
+      body.imageAfterTime = null;
+    }
+    await api.patch(`/api/exams/${selectedRecordId}/images`, body);
+    // Refresh exam detail
+    setExamDetail((prev: any) => ({
+      ...prev,
+      ...(side === "before"
+        ? { imageBeforeUrl: null, imageBeforeTime: null }
+        : { imageAfterUrl: null, imageAfterTime: null }),
+    }));
   };
 
   return (
@@ -344,6 +422,64 @@ const HealthCheckModal = (props: Props) => {
                 onChange={handleChange}
                 checked={checked}
               />
+
+              {/* ── Section 4: Đánh giá mức độ bệnh lý ── */}
+              <Divider />
+              <h1 className="text-lg font-bold">
+                4. Đánh giá mức độ bệnh lý
+              </h1>
+              <EditableTextarea
+                label="Nội dung đánh giá"
+                value={examDetail?.pathologyAssessment}
+                placeholder="Nhập đánh giá mức độ bệnh lý..."
+                loading={detailLoading}
+                onSave={(newValue) =>
+                  handleSaveAssessment("pathologyAssessment", newValue)
+                }
+              />
+
+              {/* ── Section 5: Ghi chú điều trị ── */}
+              <Divider />
+              <h1 className="text-lg font-bold">5. Ghi chú điều trị</h1>
+              <EditableTextarea
+                label="Nội dung ghi chú"
+                value={examDetail?.treatmentNote}
+                placeholder="Nhập ghi chú điều trị..."
+                loading={detailLoading}
+                onSave={(newValue) =>
+                  handleSaveAssessment("treatmentNote", newValue)
+                }
+              />
+
+              {/* ── Section 6: Ảnh thực tế trước & sau điều trị ── */}
+              <Divider />
+              <h1 className="text-lg font-bold">
+                6. Ảnh thực tế trước và sau điều trị
+              </h1>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <ImageUploadBox
+                  label="Ảnh trước điều trị"
+                  folder="before"
+                  imageUrl={examDetail?.imageBeforeUrl}
+                  imageTime={examDetail?.imageBeforeTime}
+                  loading={detailLoading}
+                  onUploaded={(url, time) =>
+                    handleImageUploaded("before", url, time)
+                  }
+                  onDeleted={() => handleImageDeleted("before")}
+                />
+                <ImageUploadBox
+                  label="Ảnh sau điều trị"
+                  folder="after"
+                  imageUrl={examDetail?.imageAfterUrl}
+                  imageTime={examDetail?.imageAfterTime}
+                  loading={detailLoading}
+                  onUploaded={(url, time) =>
+                    handleImageUploaded("after", url, time)
+                  }
+                  onDeleted={() => handleImageDeleted("after")}
+                />
+              </div>
             </div>
           )}
           <div className="mt-5 flex justify-end gap-4">

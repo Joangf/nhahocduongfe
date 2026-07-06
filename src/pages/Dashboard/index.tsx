@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { api } from "@/api/api";
+import { reportApi } from "@/api/reportApi";
+import Button from "@/components/Button";
 
 interface Props {}
 
@@ -91,9 +93,16 @@ const Dashboard = (props: Props) => {
             Báo cáo tổng hợp số liệu khám răng miệng học đường thời gian thực
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm">
-          <span className="h-2.5 w-2.5 animate-ping rounded-full bg-green-500"></span>
-          Dữ liệu trực tuyến
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => reportApi.downloadAllSchoolsExcel()}
+          >
+            Xuất Excel Tổng Hợp
+          </Button>
+          <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm">
+            <span className="h-2.5 w-2.5 animate-ping rounded-full bg-green-500"></span>
+            Dữ liệu trực tuyến
+          </div>
         </div>
       </div>
 

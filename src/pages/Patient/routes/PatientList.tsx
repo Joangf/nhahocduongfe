@@ -1,4 +1,5 @@
 import { api } from "@/api/api";
+import { reportApi } from "@/api/reportApi";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
 import Input from "@/components/Input";
@@ -13,8 +14,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { DateRangePicker } from "rsuite";
-import moment from "moment";
-import { exportFile } from "@/utils/utils";
 
 interface Props {}
 
@@ -449,21 +448,9 @@ const PatientList = (props: Props) => {
   };
 
   const handleResult = () => {
-    const startDate = moment(medicalDayRange[0]).format("DD/MM/YYYY");
-    const endDate = moment(medicalDayRange[1]).format("DD/MM/YYYY");
-    api
-      .get(
-        `/api/exams/excel/raw?schoolId=${school.value.id}&startDate=${startDate}&endDate=${endDate}`,
-        { responseType: "blob" },
-      )
-      .then((res) => {
-        if (res.status === 200) {
-          exportFile(res.data, school.label);
-        }
-      })
-      .catch((err) => {
-        throw err;
-      });
+    if (school?.value?.id) {
+      reportApi.downloadSchoolStudentsExcel(school.value.id, school.label);
+    }
   };
 
   const handleOk = (values: any) => {
@@ -528,7 +515,7 @@ const PatientList = (props: Props) => {
 
           <Button
             onClick={handleResult}
-            isDisabled={medicalDayRange.length < 2 || !school || !school.value}
+            isDisabled={!school || !school.value}
           >
             Xuất KQ
           </Button>

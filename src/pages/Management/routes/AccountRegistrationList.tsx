@@ -1,6 +1,12 @@
 import { TableColumn } from "@/components/Table/type";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
-import { useEffect, useState, useCallback } from "react";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  ChangeEvent,
+  KeyboardEvent,
+} from "react";
 import { Tooltip } from "@mui/material";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
@@ -8,12 +14,13 @@ import Table from "@/components/Table";
 import Swal from "sweetalert2";
 import Input from "@/components/Input";
 import Select from "@/components/Select";
-import { DateRangePicker } from "rsuite";
+import { DatePicker, DateRangePicker } from "rsuite";
 import moment from "moment";
 import { userApi } from "@/api/userApi";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const accountTypeOptions = [
-  { value: null, label: "None" },
+  { value: null, label: "Tất cả" },
   { value: "doctor", label: "Bác sĩ" },
   { value: "school", label: "Trường học" },
 ];
@@ -58,6 +65,7 @@ const columns: TableColumn[] = [
 ];
 
 const AccountRegistrationList = () => {
+  const isMobile = useIsMobile();
   const [curPage, setCurPage] = useState(1);
   const [totalPage, setTotalPage] = useState(0);
   const [dataFetching, setDataFetching] = useState<any[]>([]);
@@ -65,7 +73,13 @@ const AccountRegistrationList = () => {
   const [searchText, setSearchText] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [createdDateRange, setCreatedDateRange] = useState<any>([null, null]);
-  const [accountTypeFilter, setAccountTypeFilter] = useState<any>(accountTypeOptions[0]);
+  const [accountTypeFilter, setAccountTypeFilter] = useState<any>(
+    accountTypeOptions[0],
+  );
+  //* State for mobile screen
+  const [fromDate, setFromDate] = useState<Date | null>(null);
+  const [toDate, setToDate] = useState<Date | null>(null);
+
   const [reFetching, setReFetching] = useState<boolean>(false);
   const itemsPerPage = 10;
   const [tableLoading, setTableLoading] = useState<boolean>(false);
@@ -103,13 +117,20 @@ const AccountRegistrationList = () => {
             .trim()
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
-          (item.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (item.email || "")
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
           (item.phoneNumber || "").includes(searchQuery),
       );
     }
 
     // Date range filter
-    if (createdDateRange && createdDateRange[0] && createdDateRange[1]) {
+    if (
+      !isMobile &&
+      createdDateRange &&
+      createdDateRange[0] &&
+      createdDateRange[1]
+    ) {
       const startDate = moment(createdDateRange[0]).startOf("day");
       const endDate = moment(createdDateRange[1]).endOf("day");
       filtered = filtered.filter((item: any) => {
@@ -119,8 +140,19 @@ const AccountRegistrationList = () => {
       });
     }
 
-    // Account type filter
+    // Date range for mobile screen
+    if (isMobile && fromDate && toDate) {
+      const startDate = moment(fromDate).startOf("day");
+      const endDate = moment(toDate).endOf("day");
+      filtered = filtered.filter((item: any) => {
+        if (!item.createdDate) return false;
+        const created = moment(item.createdDate);
+        return created.isBetween(startDate, endDate, null, "[]");
+      });
+    }
+
     if (accountTypeFilter && accountTypeFilter.value) {
+      // Account type filter
       filtered = filtered.filter((item: any) => {
         const typeKey = getAccountTypeKey(item);
         return typeKey === accountTypeFilter.value;
@@ -133,7 +165,16 @@ const AccountRegistrationList = () => {
     const start = (curPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     setDataFetching(filtered.slice(start, end));
-  }, [allData, searchQuery, createdDateRange, accountTypeFilter, curPage]);
+  }, [
+    allData,
+    searchQuery,
+    createdDateRange,
+    accountTypeFilter,
+    curPage,
+    isMobile,
+    fromDate,
+    toDate,
+  ]);
 
   const handleSearch = () => {
     setCurPage(1);
@@ -149,6 +190,13 @@ const AccountRegistrationList = () => {
 
   const handleDateRangeClean = () => {
     setCreatedDateRange([null, null]);
+    setCurPage(1);
+  };
+
+  //* clean date for mobile
+  const handleCleanDateMobile = () => {
+    setFromDate(null);
+    setToDate(null);
     setCurPage(1);
   };
 
@@ -341,35 +389,56 @@ const AccountRegistrationList = () => {
 
   return (
     <div className="flex flex-col gap-8 sm:px-6">
-      <div className="flex items-end justify-between">
-        <div className="flex gap-3">
-          <Button onClick={handleSearch}>Tìm kiếm</Button>
-          <Input
-            className="min-w-[450px]"
-            placeholder="Tìm tài khoản, họ tên, email, SĐT"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSearch();
-            }}
-          />
-          <Select
-            className="min-w-[180px]"
-            options={accountTypeOptions}
-            value={accountTypeFilter}
-            onChange={handleAccountTypeChange}
-          />
-        </div>
-        <DateRangePicker
-          style={{ width: "280px" }}
-          placeholder={"dd/mm/yyyy - dd/mm/yyyy"}
-          format={"dd/MM/yyyy"}
-          onChange={(e) => setCreatedDateRange(e)}
-          onClean={handleDateRangeClean}
-          onOk={handleDateRangeOk}
-          placement="auto"
-          value={createdDateRange}
+      <div className="flex flex-col gap-2 p-4 lg:flex-row lg:items-center lg:gap-4">
+        <Input
+          className="w-full md:min-w-[450px] lg:max-w-[300px]"
+          placeholder="Tìm tài khoản, họ tên, email, SĐT"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter") handleSearch();
+          }}
         />
+        <Select
+          className="w-full md:min-w-[180px] lg:max-w-[200px]"
+          options={accountTypeOptions}
+          value={accountTypeFilter}
+          onChange={handleAccountTypeChange}
+        />
+        {isMobile ? (
+          <div>
+            <div className="mb-2">
+              <div>Từ ngày</div>
+              <DatePicker
+                style={{ width: "100%" }}
+                value={fromDate}
+                onChange={(value) => setFromDate(value)}
+                onClean={handleCleanDateMobile}
+              />
+            </div>
+            <div>
+              <div>Đến ngày</div>
+              <DatePicker
+                style={{ width: "100%" }}
+                value={toDate}
+                onChange={(value) => setToDate(value)}
+                onClean={handleCleanDateMobile}
+              />
+            </div>
+          </div>
+        ) : (
+          <DateRangePicker
+            style={{ width: "280px" }}
+            placeholder={"dd/mm/yyyy - dd/mm/yyyy"}
+            format={"dd/MM/yyyy"}
+            onChange={(e) => setCreatedDateRange(e)}
+            onClean={handleDateRangeClean}
+            onOk={handleDateRangeOk}
+            placement="auto"
+            value={createdDateRange}
+          />
+        )}
+        <Button onClick={handleSearch}>Tìm kiếm</Button>
       </div>
 
       <Card>

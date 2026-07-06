@@ -121,18 +121,19 @@ const Signup = () => {
         // Map account type to corresponding role
         let mappedRoleIds = [...values.roleIds];
         if (values.accountType === "BAC_SI") {
-          const doctorRole = roles.find(
-            (r) =>
-              r.code?.toUpperCase() === "DOCTOR" ||
-              r.code?.toUpperCase() === "DENTIST" ||
-              r.name?.toLowerCase().includes("bác sĩ") ||
-              r.name?.toLowerCase().includes("nha sĩ") ||
-              r.name?.toLowerCase().includes("nha khoa") ||
-              r.name?.toLowerCase().includes("doctor") ||
-              r.name?.toLowerCase().includes("dentist"),
+          const dentistRole = roles.find(
+            (r) => r.code?.toUpperCase() === "DENTIST",
           );
-          if (doctorRole) {
-            mappedRoleIds = [Number(doctorRole.id), ...mappedRoleIds];
+          if (dentistRole) {
+            mappedRoleIds = [Number(dentistRole.id), ...mappedRoleIds];
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi",
+              text: "Role DENTIST chưa tồn tại trong hệ thống. Vui lòng liên hệ admin.",
+            });
+            setIsLoading(false);
+            return;
           }
         } else if (values.accountType === "TRUONG_HOC") {
           const guestRole = roles.find(
@@ -140,6 +141,14 @@ const Signup = () => {
           );
           if (guestRole) {
             mappedRoleIds = [Number(guestRole.id), ...mappedRoleIds];
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Lỗi",
+              text: "Role GUEST chưa tồn tại trong hệ thống. Vui lòng liên hệ admin.",
+            });
+            setIsLoading(false);
+            return;
           }
         }
 
@@ -190,25 +199,25 @@ const Signup = () => {
 
   return (
     <form onSubmit={formik.handleSubmit}>
-      <div className="grid h-full grid-cols-10 bg-gray-200">
+      <div className="grid h-screen min-h-[600px] grid-cols-1 bg-gray-200 lg:grid-cols-10">
         {/* Left side - Background */}
-        <div className="relative col-span-5 flex h-screen items-center justify-center">
+        <div className="relative hidden h-full items-center justify-center lg:col-span-5 lg:flex">
           <div className="absolute left-1/2 top-1/2 max-w-lg -translate-x-1/2 -translate-y-1/2">
             <img src={bg} className="max-w-xl" />
           </div>
-          <img src={background} className="h-full w-full" />
+          <img src={background} className="h-full w-full object-cover" />
         </div>
 
         {/* Right side - Signup Form */}
-        <div className="col-span-5 flex flex-col items-center justify-center gap-6 overflow-y-auto bg-white py-8">
-          <div className="flex flex-col items-center gap-4">
-            <img src={logo} className="w-40" />
-            <h1 className="text-3xl font-bold uppercase text-indigo-600">
+        <div className="col-span-1 flex flex-col items-center justify-center gap-6 overflow-y-auto bg-white p-4 py-8 lg:col-span-5">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <img src={logo} className="w-32 lg:w-40" />
+            <h1 className="text-xl font-bold uppercase text-indigo-600 lg:text-3xl">
               Đăng ký tài khoản
             </h1>
           </div>
 
-          <div className="flex w-[450px] flex-col gap-4">
+          <div className="flex w-full max-w-[450px] flex-col gap-4">
             {/* Username */}
             <Input
               placeholder="Tên đăng nhập"

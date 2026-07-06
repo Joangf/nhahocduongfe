@@ -86,21 +86,21 @@ const Login = () => {
 
   return (
     <form onSubmit={formik.handleSubmit}>
-      <div className="grid h-full grid-cols-10  bg-gray-200">
-        <div className="relative col-span-5 flex h-screen items-center justify-center">
+      <div className="grid h-screen min-h-[600px] grid-cols-1 bg-gray-200 lg:grid-cols-10">
+        <div className="relative hidden h-full items-center justify-center lg:col-span-5 lg:flex">
           <div className="absolute left-1/2 top-1/2 max-w-lg -translate-x-1/2 -translate-y-1/2">
             <img src={bg} className="max-w-xl" />
           </div>
-          <img src={background} className="h-full w-full" />
+          <img src={background} className="h-full w-full object-cover" />
         </div>
-        <div className="col-span-5 flex flex-col items-center justify-center gap-8 bg-white">
-          <div className="flex flex-col items-center gap-4">
-            <img src={logo} className="mb-10 w-60" />
-            <h1 className="text-4xl font-bold uppercase text-indigo-600">
+        <div className="col-span-1 flex flex-col items-center justify-center gap-6 bg-white p-4 lg:col-span-5 lg:gap-8">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <img src={logo} className="mb-6 w-40 lg:mb-10 lg:w-60" />
+            <h1 className="text-2xl font-bold uppercase text-indigo-600 lg:text-4xl">
               Hệ thống quản lý nha học đường
             </h1>
           </div>
-          <div className="flex w-[450px] flex-col gap-6 text-4xl">
+          <div className="flex w-full max-w-[450px] flex-col gap-4 text-base sm:gap-6 lg:text-4xl">
             <Input
               placeholder="Tên đăng nhập"
               inputClass="py-4 !text-lg"
@@ -137,7 +137,16 @@ const Login = () => {
               name="password"
               error={formik.errors.password}
             />
-            <Checkbox label="Nhớ mật khẩu" />
+            <div className="flex items-center justify-between">
+              <Checkbox label="Nhớ mật khẩu" />
+              <button
+                type="button"
+                onClick={() => navigate("/forgot-password")}
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-500 hover:underline"
+              >
+                Quên mật khẩu?
+              </button>
+            </div>
             <Button
               isDisabled={!isEmpty(errors) || !dirty || isLoading}
               type="submit"

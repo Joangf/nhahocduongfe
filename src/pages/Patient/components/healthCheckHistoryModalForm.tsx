@@ -1,4 +1,5 @@
 import { api } from "@/api/api";
+import { reportApi } from "@/api/reportApi";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
 import Divider from "@/components/Dividers";
@@ -388,14 +389,24 @@ const HealthCheckModal = (props: Props) => {
               maxSelect={2}
               renderAction={(row: any) => (
                 isCompareMode ? null : (
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteHandle(row);
-                    }}
-                  >
-                    Xóa
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        reportApi.downloadExamReportPdf(row.patientId || id);
+                      }}
+                    >
+                      Xuất PDF
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteHandle(row);
+                      }}
+                    >
+                      Xóa
+                    </Button>
+                  </div>
                 )
               )}
             />

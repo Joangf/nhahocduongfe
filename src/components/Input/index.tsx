@@ -1,5 +1,4 @@
 import React, { HTMLInputTypeAttribute } from "react";
-import { FieldError } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 
 interface Props {
@@ -7,6 +6,7 @@ interface Props {
   label?: string;
   value?: string | number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   name?: string;
   placeholder?: string;
   fullWidth?: boolean;
@@ -37,6 +37,7 @@ const CustomInput = (
     inputClass,
     error,
     required,
+    onKeyDown,
     ...rest
   }: Props,
   ref: React.ForwardedRef<HTMLInputElement>,
@@ -82,6 +83,7 @@ const CustomInput = (
             placeholder={placeholder}
             disabled={disabled}
             onChange={onChange}
+            onKeyDown={onKeyDown}
             {...rest}
           />
 

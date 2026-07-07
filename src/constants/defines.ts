@@ -62,6 +62,12 @@ export const navMenuGroups: NavMenuGroup[] = [
         slug: slugs.managementUser,
         adminOnly: true,
       },
+      {
+        id: uuidv4(),
+        title: "Năm học",
+        slug: slugs.academicYears,
+        adminOnly: true,
+      },
     ],
   },
 ];

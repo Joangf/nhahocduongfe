@@ -1,9 +1,11 @@
 import { api } from "@/api/api";
+import { reportApi } from "@/api/reportApi";
 import { TableColumn } from "@/components/Table/type";
 import {
   PencilSquareIcon,
   XMarkIcon,
   AcademicCapIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import { Tooltip } from "@mui/material";
@@ -98,6 +100,14 @@ const ManagementList = (props: Props) => {
     ),
     action: (
       <span className="flex justify-center gap-4">
+        <Tooltip title="Xuất Excel" placement="top">
+          <ArrowDownTrayIcon
+            className="h-6 w-6 cursor-pointer text-green-600"
+            onClick={() =>
+              reportApi.downloadSchoolStudentsExcel(data.id, data.name)
+            }
+          />
+        </Tooltip>
         <Tooltip title="Chỉnh sửa" placement="top">
           <PencilSquareIcon
             className="h-6 w-6 cursor-pointer"
@@ -304,7 +314,10 @@ const ManagementList = (props: Props) => {
                 />
                 <Button onClick={handleSearch}>Tìm kiếm</Button>
               </div>
-              <div className="flex sm:justify-end">
+              <div className="flex gap-3 sm:justify-end">
+                <Button onClick={() => reportApi.downloadAllSchoolsExcel()}>
+                  Xuất báo cáo tổng hợp
+                </Button>
                 <Button
                   onClick={() => {
                     setSelectedOrganization(undefined);

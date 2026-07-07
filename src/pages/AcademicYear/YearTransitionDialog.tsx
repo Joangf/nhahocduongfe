@@ -153,6 +153,12 @@ const YearTransitionDialog = ({ open, onClose, onSuccess }: Props) => {
               <div className="mt-2 text-sm text-gray-600">
                 <p>🔹 {result.promotedCount} học sinh được lên lớp</p>
                 <p>🎓 {result.graduatedCount} học sinh tốt nghiệp</p>
+                <p className="mt-1 text-xs text-gray-400">
+                  Session ID: <code className="bg-gray-100 px-1 rounded">{result.sessionId}</code>
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  💡 Có thể khôi phục bằng nút "Khôi phục" trong Lịch sử chuyển năm
+                </p>
                 {result.warnings.length > 0 && (
                   <p className="text-yellow-600">⚠️ {result.warnings.length} cảnh báo</p>
                 )}

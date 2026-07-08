@@ -226,7 +226,8 @@ const PatientList = (props: Props) => {
     api.get("/api/areas/lookup").then((result) => {
       if (result) {
         const list = formatList(result.data);
-        setListProvince(list);
+        // Add a top-level "Tất cả" option so users can clear province filtering
+        setListProvince([{ value: "", label: "Tất cả", item: {} }, ...list]);
       }
     });
   }, []);
@@ -309,11 +310,9 @@ const PatientList = (props: Props) => {
     if (classes) {
       queryParams.append("schoolClass", classes ? classes.value : "");
     }
-    if (province) {
-      queryParams.append(
-        "areaCode",
-        province?.item.code ? province?.item.code : "",
-      );
+    // Append areaCode only when a real province with a code is selected
+    if (province && province?.item?.code) {
+      queryParams.append("areaCode", province.item.code);
     }
 
     return queryParams;
@@ -460,8 +459,20 @@ const PatientList = (props: Props) => {
     }
   };
   const filterSchoolByProvince = (province: any) => {
+    // If "Tất cả" selected (province.value === ""), show all schools
+    if (!province || !province?.item?.code) {
+      const formatSchool = organizations?.map((school: any) => ({
+        value: school,
+        label: school.name,
+      }));
+      setSchoolOptions([{ value: "", label: "Tất cả" }, ...(formatSchool || [])]);
+      setProvince(null);
+      setSchool(null);
+      return;
+    }
+
     const filteredSchools = organizations.filter(
-      (school: any) => school.areaCode === province?.item.code,
+      (school: any) => school.areaCode === province.item.code,
     );
     const formatSchool = filteredSchools.map((school: any) => ({
       value: school,

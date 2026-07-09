@@ -99,8 +99,8 @@ export default function Table({
         </div>
       ) : (
         <>
-          {/* ═══════════════ DESKTOP TABLE (≥1024px) ═══════════════ */}
-          <div className="hidden lg:block">
+          {/* ═══════════════ DESKTOP TABLE (≥900px) ═══════════════ */}
+          <div className="hidden min-[900px]:block">
             <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                 <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
@@ -151,8 +151,8 @@ export default function Table({
             </div>
           </div>
 
-          {/* ═══════════════ TABLET & MOBILE CARDS (<1024px) ═══════════════ */}
-          <div className="flex flex-col gap-3 lg:hidden">
+          {/* ═══════════════ TABLET & MOBILE CARDS (<900px) ═══════════════ */}
+          <div className="flex flex-col gap-3 min-[900px]:hidden">
             {dataSource?.map((item, rowIndex) => {
               const isExpanded = expandedCards.has(rowIndex);
 

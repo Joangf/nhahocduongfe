@@ -13,6 +13,7 @@ export const navMenuGroups: NavMenuGroup[] = [
         slug: slugs.patients,
       },
     ],
+    role: ["GUEST", "ADMIN"],
   },
   {
     id: uuidv4(),
@@ -34,6 +35,7 @@ export const navMenuGroups: NavMenuGroup[] = [
         slug: slugs.examCampaign + "/re-exams",
       },
     ],
+    role: ["DENTIST", "ADMIN"]
   },
   {
     id: uuidv4(),
@@ -63,6 +65,7 @@ export const navMenuGroups: NavMenuGroup[] = [
         adminOnly: true,
       },
     ],
+    role: ["ADMIN"],
   },
 ];
 

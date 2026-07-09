@@ -1,7 +1,7 @@
 import logo from "@/assets/logo/logo.png";
 import { navMenuGroups } from "@/constants/defines";
 import { slugs } from "@/constants/slugs";
-import { NavMenuGroup } from "@/constants/type";
+import { NavMenuGroup, Role } from "@/constants/type";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
@@ -178,6 +178,7 @@ export default function Navbar() {
   let isGuest = false;
   let isAdmin = false;
   let isDentist = false;
+  let role: Role = "GUEST";
   if (token) {
     try {
       const decoded: any = jwt_decode(token);
@@ -185,6 +186,7 @@ export default function Navbar() {
       isGuest = roles.some((r: any) => r.code === "GUEST");
       isAdmin = roles.some((r: any) => r.code === "ADMIN");
       isDentist = roles.some((r: any) => r.code === "DENTIST");
+      role = isAdmin ? "ADMIN" : isDentist ? "DENTIST" : "GUEST";
     } catch (e) {
       console.error(e);
     }
@@ -308,7 +310,7 @@ export default function Navbar() {
                   <div className="menuBar ml-6 hidden sm:flex sm:items-center sm:gap-6">
                     {(
                       // Authenticated: show grouped dropdowns
-                      navMenuGroups.map((group) => (
+                      navMenuGroups.filter((group) => group.role.includes(role)).map((group) => (
                         <NavDropdown
                           key={group.id}
                           group={group}

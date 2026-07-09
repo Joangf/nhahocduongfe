@@ -66,14 +66,6 @@ export const navMenuGroups: NavMenuGroup[] = [
   },
 ];
 
-// Flat list kept for backward compatibility (e.g., guest "Bài viết khoa học" link)
-export const navMenuItems: NavMenuItem[] = [
-  {
-    id: uuidv4(),
-    title: "Bài viết khoa học",
-    slug: slugs.dentalArticles,
-  },
-];
 
 export const reportsMenu: NavMenuItem[] = [
   {

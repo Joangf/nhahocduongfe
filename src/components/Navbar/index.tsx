@@ -1,5 +1,5 @@
 import logo from "@/assets/logo/logo.png";
-import { navMenuGroups, navMenuItems } from "@/constants/defines";
+import { navMenuGroups } from "@/constants/defines";
 import { slugs } from "@/constants/slugs";
 import { NavMenuGroup } from "@/constants/type";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
@@ -177,12 +177,14 @@ export default function Navbar() {
   const token = localStorage.getItem("accessToken");
   let isGuest = false;
   let isAdmin = false;
+  let isDentist = false;
   if (token) {
     try {
       const decoded: any = jwt_decode(token);
       const roles = decoded?.roles || [];
       isGuest = roles.some((r: any) => r.code === "GUEST");
       isAdmin = roles.some((r: any) => r.code === "ADMIN");
+      isDentist = roles.some((r: any) => r.code === "DENTIST");
     } catch (e) {
       console.error(e);
     }
@@ -245,10 +247,7 @@ export default function Navbar() {
     return () => clearInterval(interval);
   }, [fetchUnreadCount]);
 
-  // Guest users only see the flat "Bài viết khoa học" link
-  const guestItems = navMenuItems.filter(
-    (item) => item.slug === slugs.dentalArticles,
-  );
+
 
   return (
     <>
@@ -307,23 +306,7 @@ export default function Navbar() {
 
                   {/* ---- Desktop navigation dropdowns ---- */}
                   <div className="menuBar ml-6 hidden sm:flex sm:items-center sm:gap-6">
-                    {isGuest ? (
-                      // Guest: show flat link(s) only
-                      guestItems.map((item) => (
-                        <Link
-                          to={item.slug}
-                          key={item.id}
-                          className={twMerge(
-                            "inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm",
-                            "font-medium text-white hover:border-gray-300 hover:text-gray-50",
-                            location.pathname === item.slug &&
-                              "border-white font-semibold",
-                          )}
-                        >
-                          {item.title}
-                        </Link>
-                      ))
-                    ) : (
+                    {(
                       // Authenticated: show grouped dropdowns
                       navMenuGroups.map((group) => (
                         <NavDropdown
@@ -511,25 +494,7 @@ export default function Navbar() {
             {/* ---- Mobile navigation ---- */}
             <Disclosure.Panel className="sm:hidden">
               <div className="space-y-1 pb-4 pt-2">
-                {isGuest ? (
-                  // Guest: show flat link(s) only
-                  guestItems.map((item) => (
-                    <Disclosure.Button
-                      key={item.id}
-                      as={Link}
-                      to={item.slug}
-                      onClick={() => close()}
-                      className={twMerge(
-                        "block border-l-4 py-2 pl-3 pr-4 text-base font-medium",
-                        location.pathname === item.slug
-                          ? "border-white bg-white font-semibold text-indigo-600"
-                          : "border-transparent text-white hover:bg-indigo-500 hover:text-gray-50",
-                      )}
-                    >
-                      {item.title}
-                    </Disclosure.Button>
-                  ))
-                ) : (
+                {(
                   // Authenticated: show grouped collapsible sections
                   navMenuGroups.map((group) => (
                     <MobileNavGroup

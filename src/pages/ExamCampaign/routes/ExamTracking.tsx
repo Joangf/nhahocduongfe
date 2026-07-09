@@ -1,22 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { api } from "@/api/api";
 import Button from "@/components/Button";
-import Card from "@/components/Card";
-import Table from "@/components/Table";
-import { TableColumn } from "@/components/Table/type";
 import Table from "@/components/Table";
 import { TableColumn } from "@/components/Table/type";
 import Swal from "sweetalert2";
-
-const columns: TableColumn[] = [
-  { title: "STT", dataIndex: "STT" },
-  { title: "Mã HS", dataIndex: "studentCode" },
-  { title: "Họ tên", dataIndex: "name" },
-  { title: "Lớp", dataIndex: "schoolClass" },
-  { title: "SĐT", dataIndex: "phoneNumber" },
-  { title: "Trạng thái", dataIndex: "statusBadge" },
-];
 
 const columns: TableColumn[] = [
   { title: "STT", dataIndex: "STT" },

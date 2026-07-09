@@ -451,7 +451,7 @@ const AccountRegistrationList = () => {
 
       {/* Pagination */}
       {totalPage > 1 && (
-        <div className="flex cursor-pointer items-center justify-between border-t border-gray-200 bg-white dark:bg-slate-800 px-4 py-3 sm:px-6">
+        <div className="flex cursor-pointer items-center justify-between border-t border-gray-200 bg-transparent px-4 py-3 sm:px-6">
           <div className="flex flex-1 justify-between sm:hidden">
             <a
               onClick={() =>

@@ -83,7 +83,7 @@ const ChangePasswordForm = ({ onSuccess }: Props) => {
     if (!userInfo) return;
     setIsSendingOtp(true);
     try {
-      await userApi.forgotPassword(userInfo.username, userInfo.email, userInfo.phoneNumber);
+      await userApi.changePasswordSendOtp(userInfo.username, userInfo.email, userInfo.phoneNumber);
       setIsOtpSent(true);
       setCountdown(60); // 60 giây gửi lại
       Swal.fire({

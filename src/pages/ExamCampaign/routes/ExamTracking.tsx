@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { api } from "@/api/api";
 import Button from "@/components/Button";
-import Card from "@/components/Card";
 import Table from "@/components/Table";
 import { TableColumn } from "@/components/Table/type";
 import Swal from "sweetalert2";
@@ -81,7 +79,9 @@ const ExamTracking = () => {
     if (!selectedCampaignId) return;
     setNotifying(true);
     try {
-      const res = await api.post(`/api/exam-campaigns/${selectedCampaignId}/notify`);
+      const res = await api.post(
+        `/api/exam-campaigns/${selectedCampaignId}/notify`,
+      );
       const data = res.data;
       const count = data.notifiedCount || 0;
       Swal.fire(
@@ -90,7 +90,10 @@ const ExamTracking = () => {
         "success",
       );
     } catch (e: any) {
-      const errorMsg = e?.response?.data?.detail || e?.response?.data?.message || "Không thể gửi thông báo";
+      const errorMsg =
+        e?.response?.data?.detail ||
+        e?.response?.data?.message ||
+        "Không thể gửi thông báo";
       Swal.fire("Lỗi", errorMsg, "error");
     } finally {
       setNotifying(false);

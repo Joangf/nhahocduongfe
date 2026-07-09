@@ -99,8 +99,8 @@ export default function Table({
         </div>
       ) : (
         <>
-          {/* ═══════════════ DESKTOP TABLE (≥900px) ═══════════════ */}
-          <div className="hidden min-[900px]:block">
+          {/* ═══════════════ DESKTOP TABLE (≥1024px) ═══════════════ */}
+          <div className="hidden lg:block">
             <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                 <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
@@ -120,7 +120,11 @@ export default function Table({
                       </tr>
                     </thead>
                     {dataSource && dataSource.length === 0 ? (
-                      <TableEmpty variant="desktop" colSpan={columns?.length ?? 0} />
+                      <TableEmpty
+                        variant="desktop"
+                        colSpan={columns?.length ?? 0}
+                        emptyText={emptyText}
+                      />
                     ) : (
                       <tbody className="divide-y divide-gray-200 bg-white text-center dark:bg-slate-900 dark:divide-slate-800 theme-table-body-bg">
                         {dataSource?.map((item, index) => (
@@ -199,8 +203,8 @@ export default function Table({
                           mobileCardCols === 1
                             ? ""
                             : mobileCardCols === 3
-                              ? "sm:grid-cols-3"
-                              : "sm:grid-cols-2"
+                            ? "sm:grid-cols-3"
+                            : "sm:grid-cols-2"
                         }`}
                       >
                         {detailColumns.map((col, colIdx) => (
@@ -247,7 +251,7 @@ export default function Table({
 
             {/* Empty state */}
             {(!dataSource || dataSource.length === 0) && (
-              <TableEmpty variant="mobile" />
+              <TableEmpty variant="mobile" emptyText={emptyText} />
             )}
           </div>
         </>

@@ -55,7 +55,7 @@ function NavDropdown({
             className={twMerge(
               "inline-flex items-center gap-1 border-b-2 border-transparent px-2 pt-1 text-sm",
               "font-medium text-white hover:border-gray-300 hover:text-gray-50",
-              "focus:outline-none transition-colors duration-150",
+              "transition-colors duration-150 focus:outline-none",
               isActive && "border-white font-semibold",
             )}
           >
@@ -286,9 +286,15 @@ export default function Navbar() {
                     <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
                       <span className="sr-only">Open main menu</span>
                       {open ? (
-                        <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
+                        <XMarkIcon
+                          className="block h-6 w-6"
+                          aria-hidden="true"
+                        />
                       ) : (
-                        <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
+                        <Bars3Icon
+                          className="block h-6 w-6"
+                          aria-hidden="true"
+                        />
                       )}
                     </Disclosure.Button>
                   </div>
@@ -316,33 +322,31 @@ export default function Navbar() {
 
                   {/* ---- Desktop navigation dropdowns ---- */}
                   <div className="menuBar ml-6 hidden sm:flex sm:items-center sm:gap-6">
-                    {isGuest ? (
-                      // Guest: show flat link(s) only
-                      guestItems.map((item) => (
-                        <Link
-                          to={item.slug}
-                          key={item.id}
-                          className={twMerge(
-                            "inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm",
-                            "font-medium text-white hover:border-gray-300 hover:text-gray-50",
-                            location.pathname === item.slug &&
-                              "border-white font-semibold",
-                          )}
-                        >
-                          {item.title}
-                        </Link>
-                      ))
-                    ) : (
-                      // Authenticated: show grouped dropdowns
-                      navMenuGroups.map((group) => (
-                        <NavDropdown
-                          key={group.id}
-                          group={group}
-                          isAdmin={isAdmin}
-                          pathname={location.pathname}
-                        />
-                      ))
-                    )}
+                    {isGuest
+                      ? // Guest: show flat link(s) only
+                        guestItems.map((item) => (
+                          <Link
+                            to={item.slug}
+                            key={item.id}
+                            className={twMerge(
+                              "inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm",
+                              "font-medium text-white hover:border-gray-300 hover:text-gray-50",
+                              location.pathname === item.slug &&
+                                "border-white font-semibold",
+                            )}
+                          >
+                            {item.title}
+                          </Link>
+                        ))
+                      : // Authenticated: show grouped dropdowns
+                        navMenuGroups.map((group) => (
+                          <NavDropdown
+                            key={group.id}
+                            group={group}
+                            isAdmin={isAdmin}
+                            pathname={location.pathname}
+                          />
+                        ))}
                   </div>
                 </div>
 
@@ -407,7 +411,7 @@ export default function Navbar() {
                                       } ${!notification.isRead ? "bg-indigo-50/50" : ""}`}
                                     >
                                       <div className="flex items-start justify-between gap-2">
-                                        <div className="flex-1 min-w-0">
+                                        <div className="min-w-0 flex-1">
                                           <p
                                             className={`truncate text-sm ${
                                               !notification.isRead
@@ -417,7 +421,7 @@ export default function Navbar() {
                                           >
                                             {notification.title}
                                           </p>
-                                          <p className="mt-1 line-clamp-2 text-xs text-gray-500 whitespace-pre-line">
+                                          <p className="mt-1 line-clamp-2 whitespace-pre-line text-xs text-gray-500">
                                             {notification.message}
                                           </p>
                                           <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">

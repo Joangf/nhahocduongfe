@@ -84,7 +84,7 @@ function NavDropdown({
                     <Link
                       to={item.slug}
                       className={classNames(
-                        active ? "bg-indigo-50 dark:bg-slate-700/50" : "",
+                        active ? "bg-indigo-100 !text-indigo-600 dark:bg-slate-700/50" : "",
                         pathname === item.slug
                           ? "bg-indigo-100 font-semibold text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
                           : "text-gray-700 dark:text-slate-200",
@@ -372,7 +372,7 @@ export default function Navbar() {
                               {unreadCount > 0 && (
                                 <button
                                   onClick={handleMarkAllAsRead}
-                                  className="text-xs text-indigo-600 hover:text-indigo-800"
+                                  className="text-xs text-indigo-600 hover:text-indigo-300 dark:text-sky-300 dark:hover:text-sky-500"
                                 >
                                   Đánh dấu tất cả đã đọc
                                 </button>
@@ -393,22 +393,21 @@ export default function Navbar() {
                                 <Menu.Item key={notification.id}>
                                   {({ active }) => (
                                     <div
-                                      className={`cursor-pointer border-b px-4 py-3 text-sm ${
-                                        active ? "bg-gray-50 dark:bg-slate-700" : ""
-                                      } ${!notification.isRead ? "bg-indigo-50/50" : ""}`}
+                                      className={`cursor-pointer border-b px-4 py-3 text-sm ${active ? "bg-gray-50 dark:bg-slate-700" : ""
+                                        } ${!notification.isRead ? "bg-indigo-50/50 dark:bg-indigo-900/40" : ""}`}
                                     >
                                       <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0 flex-1">
                                           <p
-                                            className={`truncate text-sm ${
-                                              !notification.isRead
-                                                ? "font-semibold text-gray-900 dark:text-slate-100"
-                                                : "text-gray-700"
-                                            }`}
+                                            className={`truncate text-sm ${!notification.isRead
+                                              ? "font-semibold text-gray-900 dark:text-slate-100"
+                                              : "text-gray-700 dark:text-slate-400"
+                                              }`}
                                           >
                                             {notification.title}
                                           </p>
-                                          <p className="mt-1 line-clamp-2 whitespace-pre-line text-xs text-gray-500">
+                                          <p className={`mt-1 line-clamp-2 whitespace-pre-line text-xs ${!notification.isRead ? "text-gray-600 dark:text-slate-300" : "text-gray-500 dark:text-slate-500"
+                                            }`}>
                                             {notification.message}
                                           </p>
                                           <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
@@ -423,7 +422,7 @@ export default function Navbar() {
                                               e.stopPropagation();
                                               handleMarkAsRead(notification.id);
                                             }}
-                                            className="flex-shrink-0 text-xs text-indigo-600 hover:text-indigo-800"
+                                            className="flex-shrink-0 text-xs text-indigo-600 hover:text-indigo-300 dark:text-sky-300 dark:hover:text-sky-500"
                                           >
                                             Đã đọc
                                           </button>

@@ -103,6 +103,11 @@ const PatientList = (props: Props) => {
   const organizationType = userInfor?.organization?.type;
   const [tableLoading, setTableLoading] = useState<boolean>(false);
   const isFirstSearchRender = useRef(true);
+  //* Attr for lazy loading management
+  const provincesLoaded = useRef(false);
+  const [provincesLoading, setProvincesLoading] = useState<boolean>(false);
+  const schoolsLoaded = useRef(false);
+  const [schoolsLoading, setSchoolsLoading] = useState<boolean>(false);
 
   function flattenObject(obj: any) {
     const flattenedArray = [];
@@ -192,12 +197,22 @@ const PatientList = (props: Props) => {
       });
   };
 
-  useEffect(() => {
-    api.get(`/api/organization/search?size=1000`).then((response) => {
-      // console.log("school:", response.data.content);
-      setOrganizations(response.data.content);
-    });
-  }, []);
+  const loadSchools = () => {
+    if (schoolsLoaded.current) {
+      return;
+    }
+    schoolsLoaded.current = true;
+    setSchoolsLoading(true);
+    api
+      .get(`/api/organization/search?size=1000`)
+      .then((response) => {
+        setOrganizations(response.data.content);
+      })
+      .catch((err) => console.error(err))
+      .finally(() => {
+        setSchoolsLoading(false);
+      });
+  };
 
   function formatList(list: any) {
     return list
@@ -225,15 +240,23 @@ const PatientList = (props: Props) => {
       .sort((a: any, b: any) => a.label.localeCompare(b.label));
   }
 
-  useEffect(() => {
-    api.get("/api/areas/lookup").then((result) => {
-      if (result) {
-        const list = formatList(result.data);
-        // Add a top-level "Tất cả" option so users can clear province filtering
-        setListProvince([{ value: "", label: "Tất cả", item: {} }, ...list]);
-      }
-    });
-  }, []);
+  const loadProvinces = () => {
+    if (provincesLoaded.current) return;
+    provincesLoaded.current = true;
+    setProvincesLoading(true);
+    api
+      .get("/api/areas/lookup")
+      .then((result) => {
+        if (result) {
+          const list = formatList(result.data);
+          setListProvince([{ value: "", label: "Tất cả", item: {} }, ...list]);
+        }
+      })
+      .catch((err) => console.error("Can not fetch /api/areas/lookup ", err))
+      .finally(() => {
+        setProvincesLoading(false);
+      });
+  };
 
   useEffect(() => {
     if (reFetching) {
@@ -478,7 +501,10 @@ const PatientList = (props: Props) => {
         value: school,
         label: school.name,
       }));
-      setSchoolOptions([{ value: "", label: "Tất cả" }, ...(formatSchool || [])]);
+      setSchoolOptions([
+        { value: "", label: "Tất cả" },
+        ...(formatSchool || []),
+      ]);
       setProvince(null);
       setSchool(null);
       return;
@@ -498,24 +524,31 @@ const PatientList = (props: Props) => {
 
   return (
     <div className="mt-5 flex flex-col gap-5 px-3 sm:px-6">
-
       {/* ── Section 1: Table filters ── */}
       {!organizationType ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Select
-            label="Tỉnh/Thành"
-            placeholder="Chọn tỉnh/thành"
-            options={listProvince}
-            value={province}
-            onChange={(e) => filterSchoolByProvince(e)}
-          />
-          <Select
-            label="Trường"
-            placeholder="Chọn trường học"
-            options={schoolOptions}
-            value={school}
-            onChange={(v) => setSchool(v)}
-          />
+          <div onMouseDown={loadProvinces}>
+            <Select
+              label="Tỉnh/Thành"
+              placeholder="Chọn tỉnh/thành"
+              options={listProvince}
+              value={province}
+              onChange={(e) => filterSchoolByProvince(e)}
+              search={true}
+              loading={provincesLoading}
+            />
+          </div>
+          <div onMouseDown={loadSchools}>
+            <Select
+              label="Trường"
+              placeholder="Chọn trường học"
+              options={schoolOptions}
+              value={school}
+              search={true}
+              onChange={(v) => setSchool(v)}
+              loading={schoolsLoading}
+            />
+          </div>
           <Select
             label="Lớp"
             placeholder="Chọn lớp"
@@ -538,26 +571,36 @@ const PatientList = (props: Props) => {
 
       {/* ── Section 2: Export report (visually distinct panel) ── */}
       <div className="flex flex-col gap-3 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-3 sm:flex-row sm:items-center">
-        <span className="shrink-0 text-sm font-medium text-gray-500">Xuất kết quả theo kỳ:</span>
+        <span className="shrink-0 text-sm font-medium text-gray-500">
+          Xuất kết quả theo kỳ:
+        </span>
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
           {isMobile ? (
-            <div className="flex flex-col gap-2 w-full">
-              <div className="flex flex-col gap-1 w-full">
+            <div className="flex w-full flex-col gap-2">
+              <div className="flex w-full flex-col gap-1">
                 <div className="text-xs text-gray-500">Từ ngày</div>
                 <DatePicker
                   style={{ width: "100%" }}
                   value={medicalDayRange?.[0] || null}
-                  onChange={(value) => setMedicalDayRange([value, medicalDayRange?.[1]])}
-                  onClean={() => setMedicalDayRange([null, medicalDayRange?.[1]])}
+                  onChange={(value) =>
+                    setMedicalDayRange([value, medicalDayRange?.[1]])
+                  }
+                  onClean={() =>
+                    setMedicalDayRange([null, medicalDayRange?.[1]])
+                  }
                 />
               </div>
-              <div className="flex flex-col gap-1 w-full">
+              <div className="flex w-full flex-col gap-1">
                 <div className="text-xs text-gray-500">Đến ngày</div>
                 <DatePicker
                   style={{ width: "100%" }}
                   value={medicalDayRange?.[1] || null}
-                  onChange={(value) => setMedicalDayRange([medicalDayRange?.[0], value])}
-                  onClean={() => setMedicalDayRange([medicalDayRange?.[0], null])}
+                  onChange={(value) =>
+                    setMedicalDayRange([medicalDayRange?.[0], value])
+                  }
+                  onClean={() =>
+                    setMedicalDayRange([medicalDayRange?.[0], null])
+                  }
                 />
               </div>
             </div>
@@ -577,10 +620,7 @@ const PatientList = (props: Props) => {
               />
             </div>
           )}
-          <Button
-            onClick={handleResult}
-            isDisabled={!school || !school.value}
-          >
+          <Button onClick={handleResult} isDisabled={!school || !school.value}>
             Xuất KQ
           </Button>
         </div>
@@ -596,10 +636,18 @@ const PatientList = (props: Props) => {
           />
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
-          <Button variants="outlined" onClick={handleExport}>Export</Button>
-          <Button variants="outlined" onClick={handleImport}>Import</Button>
-          <Button variants="outlined" onClick={handleExportExportExampleFile}>File mẫu</Button>
-          <Button variants="contained" onClick={handleCreateButton}>+ Tạo mới</Button>
+          <Button variants="outlined" onClick={handleExport}>
+            Export
+          </Button>
+          <Button variants="outlined" onClick={handleImport}>
+            Import
+          </Button>
+          <Button variants="outlined" onClick={handleExportExportExampleFile}>
+            File mẫu
+          </Button>
+          <Button variants="contained" onClick={handleCreateButton}>
+            + Tạo mới
+          </Button>
         </div>
       </div>
 

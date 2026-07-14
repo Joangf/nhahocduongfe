@@ -13,11 +13,20 @@ interface Props {
   onSuccess: () => void;
 }
 
+interface StatusOption {
+  value: "UPCOMING" | "CURRENT" | "COMPLETED" | string;
+  label: string;
+}
+const STATUS_LABELS: Record<string, string> = {
+  UPCOMING: "Chưa bắt đầu",
+  CURRENT: "Đang diễn ra",
+  COMPLETED: "Đã kết thúc",
+}
 const AcademicYearFormModal = ({ open, editId, onClose, onSuccess }: Props) => {
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [status, setStatus] = useState("UPCOMING");
+  const [status, setStatus] = useState<StatusOption>({ value: "UPCOMING", label: STATUS_LABELS["UPCOMING"] });
   const [saving, setSaving] = useState(false);
 
   const isEdit = editId != null;
@@ -28,13 +37,13 @@ const AcademicYearFormModal = ({ open, editId, onClose, onSuccess }: Props) => {
         setName(y.name);
         setStartDate(y.startDate || "");
         setEndDate(y.endDate || "");
-        setStatus(y.status);
+        setStatus({ value: y.status, label: STATUS_LABELS[y.status] });
       }).catch(() => {});
     } else if (open) {
       setName("");
       setStartDate("");
       setEndDate("");
-      setStatus("UPCOMING");
+      setStatus({ value: "UPCOMING", label: STATUS_LABELS["UPCOMING"] });
     }
   }, [open, editId]);
 
@@ -46,7 +55,7 @@ const AcademicYearFormModal = ({ open, editId, onClose, onSuccess }: Props) => {
 
     setSaving(true);
     try {
-      const payload = { name, startDate: startDate || null, endDate: endDate || null, status } as any;
+      const payload = { name, startDate: startDate || null, endDate: endDate || null, status: status.value } as any;
       if (isEdit) {
         await academicYearApi.update(editId, payload);
       } else {
@@ -84,7 +93,7 @@ const AcademicYearFormModal = ({ open, editId, onClose, onSuccess }: Props) => {
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Trạng thái</label>
-          <Select value={status} onChange={e => setStatus(e.target.value)} options={statusOptions} />
+          <Select value={status} onChange={e => setStatus(e)} options={statusOptions} />
         </div>
         <div className="flex justify-end gap-3 mt-4">
           <Button variants="outlined" onClick={onClose}>Hủy</Button>

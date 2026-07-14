@@ -59,6 +59,8 @@ const UpdateHealthCheckModal = React.forwardRef<any, Props>(
     const [imageUpperTime, setImageUpperTime] = useState<string | null>(null);
     const [imageLowerUrl, setImageLowerUrl] = useState<string | null>(null);
     const [imageLowerTime, setImageLowerTime] = useState<string | null>(null);
+    const [reExamDate, setReExamDate] = useState<string>("");
+    const [reExamNote, setReExamNote] = useState<string>("");
 
     const idExam = useRef();
 
@@ -140,6 +142,8 @@ const UpdateHealthCheckModal = React.forwardRef<any, Props>(
               date: formatDate(new Date()),
               year: new Date().getFullYear(),
               useVecniFlour: checked,
+              reExamDate: reExamDate || null,
+              reExamNote: reExamNote || null,
             };
 
             const response = await createExamMutation.mutateAsync(payload);
@@ -287,6 +291,37 @@ const UpdateHealthCheckModal = React.forwardRef<any, Props>(
                   />
                 </div>
 
+                {/* ── Section 7: Lịch tái khám ── */}
+                <Divider />
+                <h1 className="text-lg font-bold">
+                  7. Lịch tái khám
+                </h1>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-gray-700">
+                      Ngày tái khám
+                    </label>
+                    <input
+                      type="date"
+                      value={reExamDate}
+                      onChange={(e) => setReExamDate(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-gray-700">
+                      Ghi chú tái khám
+                    </label>
+                    <input
+                      type="text"
+                      value={reExamNote}
+                      onChange={(e) => setReExamNote(e.target.value)}
+                      placeholder="Nhập ghi chú tái khám..."
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    />
+                  </div>
+                </div>
+
                 <div className="flex justify-end">
                   <Button
                     onClick={onClose}
@@ -338,6 +373,7 @@ const UpdateHealthCheckButton = ({ onSuccess }: any) => {
 
   return (
     <>
+      <Button onClick={() => setShow(true)}>Tạo mới phiếu khám</Button>
       {show && (
         <UpdateHealthCheckModal
           isShow={show}
@@ -345,10 +381,6 @@ const UpdateHealthCheckButton = ({ onSuccess }: any) => {
           onSuccess={onSuccess}
         />
       )}
-      <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-        <Button onClick={handleExportExams}>Xuất phiếu khám</Button>
-        <Button onClick={() => setShow(true)}>Tạo mới</Button>
-      </div>
     </>
   );
 };

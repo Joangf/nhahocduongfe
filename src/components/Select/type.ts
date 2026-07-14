@@ -17,6 +17,9 @@ export interface SelectProps<T> {
   fullWidth?: boolean;
   disabled?: boolean;
   required?: boolean;
+  loading?: boolean;
+  /** Enable search feature */
+  search?: boolean;
   error?: string | any;
   /** Enable compact display for multi-select: 1→name, >1→"Name... (+N)" with tag chips below */
   compactMulti?: boolean;

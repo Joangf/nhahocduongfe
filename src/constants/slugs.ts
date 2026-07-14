@@ -4,6 +4,7 @@ const slugs = {
   login: "/login",
   signup: "/signup",
   logout: "/logout",
+  forgotPassword: "/forgot-password",
   // --PROTECTED--
   home: "/",
   //   patient
@@ -26,6 +27,8 @@ const slugs = {
   // exam campaign
   examCampaign: "/exam-campaign",
   examSchedule: "/exam-campaign/:campaignId/schedule",
+  // academic year
+  academicYears: "/academic-years",
 };
 
 export { slugs };

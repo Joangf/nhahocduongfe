@@ -10,10 +10,11 @@ import { TableColumn } from "@/components/Table/type";
 import { getLocalUserInfo } from "@/utils/storage";
 import { PencilSquareIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Tooltip } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { DateRangePicker } from "rsuite";
+import { DateRangePicker, DatePicker } from "rsuite";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface Props {}
 
@@ -83,6 +84,7 @@ const PatientList = (props: Props) => {
   const navigate = useNavigate();
   const [dataFetching, setDataFetching] = useState([]);
   const [organizations, setOrganizations] = useState([]);
+  const isMobile = useIsMobile();
   const [classOptions, setClassOptions] = useState<any>();
   const [schoolOptions, setSchoolOptions] = useState<any>();
   const [searchText, setSearchText] = useState("");
@@ -100,6 +102,12 @@ const PatientList = (props: Props) => {
   const userInfor = getLocalUserInfo();
   const organizationType = userInfor?.organization?.type;
   const [tableLoading, setTableLoading] = useState<boolean>(false);
+  const isFirstSearchRender = useRef(true);
+  //* Attr for lazy loading management
+  const provincesLoaded = useRef(false);
+  const [provincesLoading, setProvincesLoading] = useState<boolean>(false);
+  const schoolsLoaded = useRef(false);
+  const [schoolsLoading, setSchoolsLoading] = useState<boolean>(false);
 
   function flattenObject(obj: any) {
     const flattenedArray = [];
@@ -189,47 +197,71 @@ const PatientList = (props: Props) => {
       });
   };
 
-  useEffect(() => {
-    api.get(`/api/organization/search?size=1000`).then((response) => {
-      // console.log("school:", response.data.content);
-      setOrganizations(response.data.content);
-    });
-  }, []);
+  const loadSchools = () => {
+    if (schoolsLoaded.current) {
+      return;
+    }
+    schoolsLoaded.current = true;
+    setSchoolsLoading(true);
+    api
+      .get(`/api/organization/search?size=1000`)
+      .then((response) => {
+        setOrganizations(response.data.content);
+      })
+      .catch((err) => console.error(err))
+      .finally(() => {
+        setSchoolsLoading(false);
+      });
+  };
 
   function formatList(list: any) {
-    return list
-      .map((item: any) => {
-        let result = item.name;
-        const listRemove = [
-          "Tỉnh ",
-          "Thành phố ",
-          "Thị xã ",
-          "Quận ",
-          "Huyện ",
-          "Phường ",
-          "Xã ",
-        ];
-        listRemove.map((element) => {
-          result = result.replace(element, "");
-        });
+    const uniqueMap = new Map();
+    list.forEach((item: any) => {
+      let result = item.name;
+      const listRemove = [
+        "Tỉnh ",
+        "Thành phố ",
+        "Thị xã ",
+        "Quận ",
+        "Huyện ",
+        "Phường ",
+        "Xã ",
+      ];
+      listRemove.forEach((element) => {
+        result = result.replace(element, "");
+      });
 
-        return {
+      if (!uniqueMap.has(result)) {
+        uniqueMap.set(result, {
           value: result,
           label: result,
           item: item,
-        };
-      })
-      .sort((a: any, b: any) => a.label.localeCompare(b.label));
-  }
-
-  useEffect(() => {
-    api.get("/api/areas/lookup").then((result) => {
-      if (result) {
-        const list = formatList(result.data);
-        setListProvince(list);
+        });
       }
     });
-  }, []);
+
+    return Array.from(uniqueMap.values()).sort((a: any, b: any) =>
+      a.label.localeCompare(b.label),
+    );
+  }
+
+  const loadProvinces = () => {
+    if (provincesLoaded.current) return;
+    provincesLoaded.current = true;
+    setProvincesLoading(true);
+    api
+      .get("/api/areas/lookup")
+      .then((result) => {
+        if (result) {
+          const list = formatList(result.data);
+          setListProvince([{ value: "", label: "Tất cả", item: {} }, ...list]);
+        }
+      })
+      .catch((err) => console.error("Can not fetch /api/areas/lookup ", err))
+      .finally(() => {
+        setProvincesLoading(false);
+      });
+  };
 
   useEffect(() => {
     if (reFetching) {
@@ -264,9 +296,13 @@ const PatientList = (props: Props) => {
   }, [organizations]);
 
   useEffect(() => {
-    if (school && school.value) {
+    if (school && school.value && school.value.classes) {
       setClasses("");
-      let formatClass = school.value.classes?.["1"].map((schoolClass: any) => {
+      const tempClasses = [];
+      for (const [key, value] of Object.entries(school.value.classes)) {
+        tempClasses.push(...(value as string[]));
+      }
+      let formatClass = tempClasses?.map((schoolClass: any) => {
         return {
           value: schoolClass,
           label: schoolClass,
@@ -274,7 +310,8 @@ const PatientList = (props: Props) => {
       });
       formatClass = formatClass || [];
       setClassOptions([{ value: "", label: "Tất cả" }, ...formatClass]);
-    } else setClassOptions([]);
+      handleSearch({ classes: "" });
+    } else setClassOptions(undefined);
   }, [school]);
 
   if (organizationType) {
@@ -295,33 +332,59 @@ const PatientList = (props: Props) => {
     }, [organizationType]);
   }
 
-  const filterParam = () => {
+  const filterParam = (overrides?: {
+    searchText?: string;
+    school?: any;
+    classes?: any;
+    province?: any;
+  }) => {
     const queryParams = new URLSearchParams();
-    if (searchText) {
-      queryParams.append("searchText", searchText);
+
+    // Resolve current values, favoring overrides if provided
+    const currentSearchText =
+      overrides && "searchText" in overrides
+        ? overrides.searchText
+        : searchText;
+    const currentSchool =
+      overrides && "school" in overrides ? overrides.school : school;
+    const currentClasses =
+      overrides && "classes" in overrides ? overrides.classes : classes;
+    const currentProvince =
+      overrides && "province" in overrides ? overrides.province : province;
+
+    if (currentSearchText) {
+      queryParams.append("searchText", currentSearchText);
     }
-    if (school) {
+    if (currentSchool) {
       queryParams.append(
         "organizationName",
-        school?.label !== "Tất cả" ? school?.label : "",
+        currentSchool?.label !== "Tất cả" ? currentSchool?.label : "",
       );
     }
-    if (classes) {
-      queryParams.append("schoolClass", classes ? classes.value : "");
+    if (currentClasses) {
+      const classValue =
+        typeof currentClasses === "object"
+          ? currentClasses.value
+          : currentClasses;
+      queryParams.append("schoolClass", classValue || "");
     }
-    if (province) {
-      queryParams.append(
-        "areaCode",
-        province?.item.code ? province?.item.code : "",
-      );
+    // Append areaCode only when a real province with a code is selected
+    if (currentProvince && currentProvince?.item?.code) {
+      queryParams.append("areaCode", currentProvince.item.code);
     }
 
     return queryParams;
   };
 
-  const handleSearch = (e: any) => {
-    const queryParams = filterParam();
-    console.log("quert:", queryParams);
+  const handleSearch = (overrides?: {
+    searchText?: string;
+    school?: any;
+    classes?: any;
+    province?: any;
+  }) => {
+    setTableLoading(true);
+    const queryParams = filterParam(overrides);
+    console.log(queryParams.toString());
     api
       .get(`/api/patient/search?sort=id,desc`, { params: queryParams })
       .then((res) => {
@@ -333,8 +396,20 @@ const PatientList = (props: Props) => {
       })
       .catch((err) => {
         throw err;
-      });
+      })
+      .finally(() => setTableLoading(false));
   };
+
+  useEffect(() => {
+    if (isFirstSearchRender.current) {
+      isFirstSearchRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      handleSearch();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   const handleDelete = (id: number, name: string) => {
     Swal.fire({
@@ -460,8 +535,25 @@ const PatientList = (props: Props) => {
     }
   };
   const filterSchoolByProvince = (province: any) => {
+    // If "Tất cả" selected (province.value === ""), show all schools
+    if (!province || !province?.item?.code) {
+      const formatSchool = organizations?.map((school: any) => ({
+        value: school,
+        label: school.name,
+      }));
+      setSchoolOptions([
+        { value: "", label: "Tất cả" },
+        ...(formatSchool || []),
+      ]);
+      setProvince(null);
+      setSchool(null);
+      setClasses("");
+      handleSearch({ province: null, school: null, classes: "" });
+      return;
+    }
+
     const filteredSchools = organizations.filter(
-      (school: any) => school.areaCode === province?.item.code,
+      (school: any) => school.areaCode === province.item.code,
     );
     const formatSchool = filteredSchools.map((school: any) => ({
       value: school,
@@ -470,34 +562,50 @@ const PatientList = (props: Props) => {
     setSchoolOptions([{ value: "", label: "Tất cả" }, ...formatSchool]);
     setProvince(province);
     setSchool(null);
+    setClasses("");
+    handleSearch({ province: province, school: null, classes: "" });
   };
 
   return (
     <div className="mt-5 flex flex-col gap-5 px-3 sm:px-6">
-
       {/* ── Section 1: Table filters ── */}
       {!organizationType ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Select
-            label="Tỉnh/Thành"
-            placeholder="Chọn tỉnh/thành"
-            options={listProvince}
-            value={province}
-            onChange={(e) => filterSchoolByProvince(e)}
-          />
-          <Select
-            label="Trường"
-            placeholder="Chọn trường học"
-            options={schoolOptions}
-            value={school}
-            onChange={(v) => setSchool(v)}
-          />
+          <div onMouseDown={loadProvinces}>
+            <Select
+              label="Tỉnh/Thành"
+              placeholder="Chọn tỉnh/thành"
+              options={listProvince}
+              value={province}
+              onChange={(e) => filterSchoolByProvince(e)}
+              search={true}
+              loading={provincesLoading}
+            />
+          </div>
+          <div onMouseDown={loadSchools}>
+            <Select
+              label="Trường"
+              placeholder="Chọn trường học"
+              options={schoolOptions}
+              value={school}
+              search={true}
+              onChange={(v) => {
+                setSchool(v);
+                setClasses("");
+                handleSearch({ school: v, classes: "" });
+              }}
+              loading={schoolsLoading}
+            />
+          </div>
           <Select
             label="Lớp"
             placeholder="Chọn lớp"
             value={classes}
             options={classOptions}
-            onChange={(v) => setClasses(v)}
+            onChange={(v) => {
+              setClasses(v);
+              handleSearch({ classes: v });
+            }}
           />
         </div>
       ) : (
@@ -507,7 +615,10 @@ const PatientList = (props: Props) => {
             placeholder="Chọn lớp"
             value={classes}
             options={classOptions}
-            onChange={(v) => setClasses(v)}
+            onChange={(v) => {
+              setClasses(v);
+              handleSearch({ classes: v });
+            }}
           />
         </div>
       )}
@@ -542,15 +653,23 @@ const PatientList = (props: Props) => {
         <div className="flex flex-col gap-3 sm:flex-row">
           <Input
             placeholder="Nhập họ tên hoặc mã BHYT"
+            value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          <Button variants="outlined" onClick={handleSearch}>Tìm kiếm</Button>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
-          <Button variants="outlined" onClick={handleExport}>Export</Button>
-          <Button variants="outlined" onClick={handleImport}>Import</Button>
-          <Button variants="outlined" onClick={handleExportExportExampleFile}>File mẫu</Button>
-          <Button variants="contained" onClick={handleCreateButton}>+ Tạo mới</Button>
+          <Button variants="outlined" onClick={handleExport}>
+            Export
+          </Button>
+          <Button variants="outlined" onClick={handleImport}>
+            Import
+          </Button>
+          <Button variants="outlined" onClick={handleExportExportExampleFile}>
+            File mẫu
+          </Button>
+          <Button variants="contained" onClick={handleCreateButton}>
+            + Tạo mới
+          </Button>
         </div>
       </div>
 

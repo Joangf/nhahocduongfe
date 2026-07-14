@@ -11,20 +11,21 @@ const Dashboard = (props: Props) => {
   const [loading, setLoading] = useState(true);
   const [schoolSearch, setSchoolSearch] = useState("");
   const [reExamSearch, setReExamSearch] = useState("");
+  const [studentCounts, setStudentCounts] = useState<any[]>([]);
+  const [studentCountHistory, setStudentCountHistory] = useState<any[]>([]);
 
   useEffect(() => {
     setLoading(true);
-    // Fetch stats and re-exams in parallel
+    // Fetch stats, re-exams, and student counts in parallel
     Promise.all([
       api.get("/api/dashboard/stats").then((res) => res.data),
-      api
-        .get("/api/exams/re-exams")
-        .then((res) => res.data)
-        .catch(() => []),
+      api.get("/api/exams/re-exams").then((res) => res.data).catch(() => []),
+      api.get("/api/dashboard/student-count-history").then(res => res.data).catch(() => []),
     ])
-      .then(([statsData, reExamsData]) => {
+      .then(([statsData, reExamsData, historyData]) => {
         setStats(statsData);
         setReExams(reExamsData);
+        setStudentCountHistory(historyData || []);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -86,7 +87,7 @@ const Dashboard = (props: Props) => {
       {/* Header section */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-slate-100">
             Tổng Quan Hệ Thống Nha Học Đường
           </h1>
           <p className="mt-1 text-gray-500">
@@ -114,7 +115,7 @@ const Dashboard = (props: Props) => {
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
                 Tổng Đợt Khám
               </h3>
-              <p className="text-3.5xl mt-2 font-black text-gray-900">
+              <p className="text-3.5xl mt-2 font-black text-gray-900 dark:text-slate-100">
                 {stats?.totalCampaigns}
               </p>
             </div>
@@ -140,7 +141,7 @@ const Dashboard = (props: Props) => {
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">
                 Tổng Số Học Sinh
               </h3>
-              <p className="text-3.5xl mt-2 font-black text-gray-900">
+              <p className="text-3.5xl mt-2 font-black text-gray-900 dark:text-slate-100">
                 {stats?.totalStudents}
               </p>
             </div>
@@ -164,13 +165,49 @@ const Dashboard = (props: Props) => {
         </div>
       </div>
 
+      {/* Student Count by Year */}
+      {studentCountHistory.length > 0 && (
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
+            📊 Biến động sĩ số qua các năm học
+          </h2>
+          <div className="flex h-[200px] items-end justify-around border-b border-gray-200 px-4 pb-6 pt-4">
+            {(() => {
+              const maxCount = Math.max(...studentCountHistory.map((y: any) => y.studentCount), 1);
+              return studentCountHistory.map((y: any, idx: number) => {
+                const heightPercent = `${(y.studentCount / maxCount) * 100}%`;
+                return (
+                  <div key={idx} className="group relative flex w-24 flex-col items-center">
+                    <div className="absolute bottom-full z-10 mb-2 whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                      {y.studentCount} học sinh
+                    </div>
+                    <div className="flex h-32 w-12 items-end overflow-hidden rounded-t-lg bg-gray-100">
+                      <div
+                        className="w-full bg-indigo-500 transition-all duration-500 hover:bg-indigo-600"
+                        style={{ height: heightPercent }}
+                      ></div>
+                    </div>
+                    <div className="mt-2 text-sm font-semibold text-indigo-600">
+                      {y.studentCount}
+                    </div>
+                    <div className="mt-1 text-xs font-medium text-gray-500">
+                      {y.yearName}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      )}
+
       {/* Main Charts & Analytics Row */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left: Years & Top Schools */}
         <div className="flex flex-col space-y-6 lg:col-span-2">
           {/* Year-by-year Chart */}
           <div className="flex flex-1 flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-slate-100">
               Biểu đồ tỷ lệ sâu răng theo năm học
             </h2>
             <div className="flex h-[240px] items-end justify-around border-b border-gray-200 px-4 pb-6 pt-4">
@@ -215,7 +252,7 @@ const Dashboard = (props: Props) => {
           {/* Caries Rate by School/Class */}
           <div className="flex flex-1 flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+              <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-slate-100">
                 Thống kê tỷ lệ sâu răng theo trường/lớp
               </h2>
               <input
@@ -228,7 +265,7 @@ const Dashboard = (props: Props) => {
             </div>
             <div className="max-h-[300px] flex-1 overflow-y-auto">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 bg-gray-50">
+                <thead className="sticky top-0 bg-gray-50 dark:bg-slate-800">
                   <tr>
                     <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase text-gray-600">
                       Trường
@@ -247,10 +284,10 @@ const Dashboard = (props: Props) => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                   {filteredSchoolClasses.map((item: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-gray-50/50">
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                    <tr key={idx} className="hover:bg-gray-50/50 dark:hover:bg-slate-700/50">
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-slate-100">
                         {item.schoolName}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
@@ -295,7 +332,7 @@ const Dashboard = (props: Props) => {
         <div className="flex flex-col space-y-6">
           {/* Top Schools */}
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
+            <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-slate-100">
               Top trường có tỷ lệ bệnh răng miệng cao
             </h2>
             <div className="space-y-4">
@@ -328,7 +365,7 @@ const Dashboard = (props: Props) => {
           {/* Pathology Heatmap */}
           <div className="flex flex-1 flex-col justify-between rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <div>
-              <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+              <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-slate-100">
                 Heatmap phân bố sâu răng theo vị trí răng
               </h2>
               <p className="mt-1 text-xs text-gray-400">
@@ -445,7 +482,7 @@ const Dashboard = (props: Props) => {
       {/* Row: Students needing re-exam */}
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-slate-100">
             Danh sách học sinh cần tái khám
           </h2>
           <input
@@ -475,20 +512,20 @@ const Dashboard = (props: Props) => {
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">
                   Ngày Tái Khám Dự Kiến
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-slate-300">
                   Lý Do / Ghi Chú
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
               {filteredReExams.slice(0, 10).map((e: any, idx: number) => (
-                <tr key={idx} className="hover:bg-gray-50/50">
-                  <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
-                  <td className="px-4 py-3 font-semibold text-gray-900">
+                <tr key={idx} className="hover:bg-gray-50/50 dark:hover:bg-slate-700/50">
+                  <td className="px-4 py-3 text-gray-500 dark:text-slate-400">{idx + 1}</td>
+                  <td className="px-4 py-3 font-semibold text-gray-900 dark:text-slate-100">
                     {e.patientName}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{e.schoolClass}</td>
-                  <td className="px-4 py-3 text-gray-600">{e.date}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{e.schoolClass}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-slate-300">{e.date}</td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-bold text-orange-700">
                       {e.reExamDate}

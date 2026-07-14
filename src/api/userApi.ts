@@ -18,7 +18,7 @@ export interface PageResponse<T> {
 
 export const userApi = {
   /** Tạo user mới — gọi POST /api/user/register */
-  create: (data: Omit<IUserInformation, "id" | "rePassword">) => {
+  create: (data: Omit<IUserInformation, "id" | "rePassword">, token: string) => {
     const payload = {
       username: data.username,
       password: data.password,
@@ -32,7 +32,7 @@ export const userApi = {
         ? data.roleIds.map((id) => ({ id: String(id) }))
         : [],
     };
-    return api.post("/api/user/register", payload);
+    return api.post(`/api/user/register?token=${token}`, payload);
   },
 
   /** Lấy danh sách user có phân trang + search */
@@ -102,4 +102,23 @@ export const userApi = {
 
   /** Đăng xuất — ghi nhận thời điểm logout */
   logout: () => api.post("/api/auth/logout"),
+
+  /** Yêu cầu gửi mã OTP để đặt lại mật khẩu */
+  forgotPassword: (username: string, email: string, phoneNumber: string) => 
+    api.post("/api/auth/forgot-password", { username, email, phoneNumber }),
+
+  /** Xác thực OTP và nhận token đặt lại mật khẩu */
+  verifyOtp: (email: string, otp: string) => api.post("/api/auth/verify-otp", { email, otp }),
+
+  /** Đặt lại mật khẩu mới bằng token */
+  resetPassword: (resetToken: string, newPassword: string) => 
+    api.post("/api/auth/reset-password", { resetToken, newPassword }),
+
+  /** Yêu cầu gửi mã OTP để đăng ký */
+  registerSendOtp: (username: string, email: string, phoneNumber: string) =>
+    api.post("/api/auth/register-send-otp", { username, email, phoneNumber }),
+
+  /** Yêu cầu gửi mã OTP để thay đổi mật khẩu */
+  changePasswordSendOtp: (username: string, email: string, phoneNumber: string) =>
+    api.post("/api/auth/change-password-send-otp", { username, email, phoneNumber }),
 };

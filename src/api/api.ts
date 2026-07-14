@@ -94,6 +94,13 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Nếu nhận 403 (tài khoản bị khóa / chưa duyệt) thì tự động logout
+    if (error.response?.status === 403) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("username");
+      localStorage.removeItem("token");
+      window.open("/login", "_self");
+    }
     return Promise.reject(error);
   },
 );

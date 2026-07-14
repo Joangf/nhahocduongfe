@@ -104,8 +104,8 @@ export default function Table({
             <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
               <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                 <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-                  <table className="min-w-full cursor-pointer divide-y divide-gray-300">
-                    <thead className="bg-indigo-500 text-center text-white">
+                  <table className="min-w-full cursor-pointer divide-y divide-gray-300 dark:divide-slate-700">
+                    <thead className="theme-table-head bg-indigo-500 text-center text-white dark:bg-slate-800">
                       <tr>
                         {columns?.map((column, index) => (
                           <Fragment key={index}>
@@ -120,13 +120,17 @@ export default function Table({
                       </tr>
                     </thead>
                     {dataSource && dataSource.length === 0 ? (
-                      <TableEmpty variant="desktop" colSpan={columns?.length ?? 0} />
+                      <TableEmpty
+                        variant="desktop"
+                        colSpan={columns?.length ?? 0}
+                        emptyText={emptyText}
+                      />
                     ) : (
-                      <tbody className="divide-y divide-gray-200 bg-white text-center">
+                      <tbody className="theme-table-body-bg divide-y divide-gray-200 bg-white text-center dark:divide-slate-800 dark:bg-slate-900">
                         {dataSource?.map((item, index) => (
                           <tr
                             key={index}
-                            className="even:bg-gray-50 hover:bg-gray-100"
+                            className="theme-table-row-alt theme-table-row-hover even:bg-gray-50 hover:bg-gray-100 dark:even:bg-slate-800/50 dark:hover:bg-slate-800"
                             onClick={(e) =>
                               onColumnClick && onColumnClick(item)
                             }
@@ -135,7 +139,7 @@ export default function Table({
                               return (
                                 <td
                                   key={column.key ? column.key : index}
-                                  className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                                  className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-slate-200 sm:pl-6"
                                 >
                                   {item[column.dataIndex]}
                                 </td>
@@ -151,7 +155,7 @@ export default function Table({
             </div>
           </div>
 
-          {/* ═══════════════ TABLET & MOBILE CARDS (<1024px) ═══════════════ */}
+          {/* ═══════════════ TABLET & MOBILE CARDS (<900px) ═══════════════ */}
           <div className="flex flex-col gap-3 lg:hidden">
             {dataSource?.map((item, rowIndex) => {
               const isExpanded = expandedCards.has(rowIndex);
@@ -159,7 +163,7 @@ export default function Table({
               return (
                 <div
                   key={rowIndex}
-                  className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+                  className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-slate-700 dark:bg-slate-800"
                 >
                   {/* ── Card Header (always visible) ── */}
                   <button
@@ -170,13 +174,13 @@ export default function Table({
                     <div className="flex min-w-0 items-center gap-3">
                       {/* STT badge */}
                       {headerColumns[0] && (
-                        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
+                        <span className="theme-badge-bg inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
                           {item[headerColumns[0].dataIndex]}
                         </span>
                       )}
                       {/* Primary identifier */}
                       {headerColumns[1] && (
-                        <span className="truncate text-sm font-semibold text-gray-900">
+                        <span className="truncate text-sm font-semibold text-gray-900 dark:text-slate-100">
                           {item[headerColumns[1].dataIndex]}
                         </span>
                       )}
@@ -192,23 +196,23 @@ export default function Table({
                         : "max-h-0 opacity-0"
                     } overflow-hidden`}
                   >
-                    <div className="border-t border-gray-100 px-4 py-3">
+                    <div className="border-t border-gray-100 px-4 py-3 dark:border-slate-700">
                       {/* All detail columns as label-value pairs */}
                       <dl
                         className={`grid grid-cols-1 gap-2 ${
                           mobileCardCols === 1
                             ? ""
                             : mobileCardCols === 3
-                              ? "sm:grid-cols-3"
-                              : "sm:grid-cols-2"
+                            ? "sm:grid-cols-3"
+                            : "sm:grid-cols-2"
                         }`}
                       >
                         {detailColumns.map((col, colIdx) => (
                           <div key={colIdx} className="flex flex-col py-1">
-                            <dt className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                            <dt className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">
                               {col.title}
                             </dt>
-                            <dd className="mt-0.5 break-words text-sm text-gray-900">
+                            <dd className="mt-0.5 break-words text-sm text-gray-900 dark:text-slate-200">
                               {item[col.dataIndex] ?? "—"}
                             </dd>
                           </div>
@@ -217,7 +221,7 @@ export default function Table({
 
                       {/* Action buttons */}
                       {actionColumns.length > 0 && (
-                        <div className="mt-3 flex items-center gap-3 border-t border-gray-100 pt-3">
+                        <div className="mt-3 flex items-center gap-3 border-t border-gray-100 pt-3 dark:border-slate-700">
                           {actionColumns.map((col, colIdx) => (
                             <div
                               key={colIdx}
@@ -233,7 +237,7 @@ export default function Table({
                       {onColumnClick && (
                         <button
                           type="button"
-                          className="mt-3 w-full rounded-md bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition-colors hover:bg-indigo-100"
+                          className="theme-action-text mt-3 w-full rounded-md bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-600 transition-colors hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
                           onClick={() => onColumnClick(item)}
                         >
                           Xem chi tiết →
@@ -247,7 +251,7 @@ export default function Table({
 
             {/* Empty state */}
             {(!dataSource || dataSource.length === 0) && (
-              <TableEmpty variant="mobile" />
+              <TableEmpty variant="mobile" emptyText={emptyText} />
             )}
           </div>
         </>

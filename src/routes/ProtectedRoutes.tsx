@@ -16,63 +16,33 @@ import {
 } from "@/pages/Patient/routes";
 import Superset_BC1 from "@/pages/Superset_BC1";
 
-import { Navigate, Outlet, useRoutes } from "react-router-dom";
-import jwt_decode from "jwt-decode";
-import DentalArticles from "@/pages/DentalArticles";
+import { Navigate, Outlet, RouteObject, useRoutes } from "react-router-dom";
 import {
   ExamCampaignList,
   ExamScheduleManager,
   ExamTracking,
   ReExamList,
 } from "@/pages/ExamCampaign/routes";
+import AcademicYearList from "@/pages/AcademicYear/AcademicYearList";
 
 const ProtectedRoutes = (): React.ReactElement<
   any,
   string | React.JSXElementConstructor<any>
 > | null => {
   const token = localStorage.getItem("accessToken");
-  let isGuest = false;
-  if (token) {
-    try {
-      const decoded: any = jwt_decode(token);
-      const roles = decoded?.roles || [];
-      isGuest = roles.some((r: any) => r.code === "GUEST");
-    } catch (e) {
-      console.error(e);
+  const guestRoutes: RouteObject[] = [
+    {
+      element: <Navigate to={slugs.login} />,
+      path: "*"
     }
-  }
-
-  const guestRoutes = [
-    {
-      element: <Layout />,
-      children: [
-        {
-          path: slugs.dentalArticles,
-          element: <DentalArticles />,
-        },
-        {
-          path: slugs.logout,
-          element: <Logout />,
-        },
-        {
-          path: "*",
-          element: <Navigate to={slugs.dentalArticles} />,
-        },
-      ],
-    },
   ];
-
-  const normalRoutes = [
+  const normalRoutes: RouteObject[] = [
     {
       element: <Layout />,
       children: [
         {
           path: slugs.logout,
           element: <Logout />,
-        },
-        {
-          path: slugs.dentalArticles,
-          element: <DentalArticles />,
         },
         {
           path: slugs.home,
@@ -183,6 +153,10 @@ const ProtectedRoutes = (): React.ReactElement<
           ],
         },
         {
+          path: slugs.academicYears,
+          element: <AcademicYearList />,
+        },
+        {
           path: "*",
           element: <Navigate to="/patient" />,
           // element: <Navigate to="/" />,
@@ -191,7 +165,7 @@ const ProtectedRoutes = (): React.ReactElement<
     },
   ];
 
-  const element = useRoutes(isGuest ? guestRoutes : normalRoutes);
+  const element = useRoutes(token ? normalRoutes : guestRoutes);
   return element;
 };
 

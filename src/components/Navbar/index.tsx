@@ -16,6 +16,7 @@ import { twMerge } from "tailwind-merge";
 import Modal from "@/components/Modal";
 import ChangePasswordForm from "@/pages/Login/ChangePassWord";
 import jwt_decode from "jwt-decode";
+import useAuthStore from "@/stores/authStore";
 import {
   notificationApi,
   NotificationItem,
@@ -168,7 +169,8 @@ export default function Navbar() {
   // Controls the visibility of the sliding ThemeConfig panel
   const [isThemeOpen, setIsThemeOpen] = useState(false);
 
-  const token = localStorage.getItem("accessToken");
+  const token = useAuthStore((state) => state.accessToken);
+  const username = useAuthStore((state) => state.username);
   let isGuest = false;
   let isAdmin = false;
   let isDentist = false;
@@ -456,7 +458,7 @@ export default function Navbar() {
                     <div>
                       <Menu.Button className="flex rounded-full text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <span className="">
-                          {localStorage.getItem("username") || "VTS-TTGPMN"}
+                          {username || "VTS-TTGPMN"}
                         </span>
                       </Menu.Button>
                     </div>
@@ -470,7 +472,7 @@ export default function Navbar() {
                       leaveTo="transform opacity-0 scale-95"
                     >
                       <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-slate-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        {localStorage.getItem("username") != "guest" && (
+                        {username != "guest" && (
                           <Menu.Item>
                             {({ active }) => (
                               <>
